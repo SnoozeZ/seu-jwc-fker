@@ -10,9 +10,9 @@ import string
 import re  
   
 #登录的主页面  
-hosturl = 'http://xk.urp.seu.edu.cn/' #自己填写  
+hosturl = 'http://xk.urp.seu.edu.cn/' 
 #post数据接收和处理的页面（我们要向这个页面发送我们构造的Post数据）  
-posturl = 'http://xk.urp.seu.edu.cn/jw_css/system/login.action' #从数据包中分析出，处理post请求的url  
+posturl = 'http://xk.urp.seu.edu.cn/jw_css/system/login.action' 
   
 #设置一个cookie处理器，它负责从服务器下载cookie到本地，并且在发送请求时带上本地的cookie  
 cj = cookielib.LWPCookieJar()
@@ -30,8 +30,7 @@ f.close()
 code = raw_input('打开code.jpg 输入里面的字符')
 
 
-#urllib.request.urlretieve('http://xk.urp.seu.edu.cn/jw_css/getCheckCode','E:\\lovecode\\1.jpg')
-#构造header，一般header至少要包含一下两项。这两项是从抓到的包里分析得出的。  
+#构造header
 headers = { 'Host' : 'xk.urp.seu.edu.cn',
             'Proxy-Connection' : 'keep-alive',
             'Origin' : 'http://xk.urp.seu.edu.cn',
@@ -39,13 +38,13 @@ headers = { 'Host' : 'xk.urp.seu.edu.cn',
             'Referer' : 'http://xk.urp.seu.edu.cn/jw_css/system/login.action'
             
            }  
-#构造Post数据，他也是从抓大的包里分析得出的。  
+#构造Post数据 
 postData = {
             'userId' : '213111455', #你的用户名  
-            'userPassword' : 'ft4969464', #你的密码，密码可能是明文传输也可能是密文，如果是密文需要调用相应的加密算法加密  
-            'checkCode' : code,   #特有数据，不同网站可能不同  
-            'x' : '33',  #特有数据，不同网站可能不同
-            'y' : '5'
+            'userPassword' : 'ft4969464', #你的密码，  
+            'checkCode' : code,   #验证码 
+            'x' : '33',  #别管
+            'y' : '5'       #别管2
   
             }  
   
