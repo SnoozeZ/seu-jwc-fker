@@ -40,8 +40,8 @@ headers = { 'Host' : 'xk.urp.seu.edu.cn',
            }  
 #构造Post数据 
 postData = {
-            'userId' : '213111455', #你的用户名  
-            'userPassword' : 'ft4969464', #你的密码，  
+            'userId' : '213111111', #你的用户名  
+            'userPassword' : '11111111', #你的密码，  
             'checkCode' : code,   #验证码 
             'x' : '33',  #别管
             'y' : '5'       #别管2
