@@ -7,7 +7,7 @@ SeuJwcFucker是一个辅助同学们在东南大学选课系统中顺利选课�
 可以登录选课系统，当发现“服从推荐”的课程有剩余时，本工具会帮你选上。
 ###SeuJwcFker还需要改进的地方：
 * 需要验证码识别技术，以支持更多的课程类型（目前只支持可以“服从推荐”的课程）
-* 代码很烂，可能有一些潜在的Bugs
+* 匆忙中完成beta版，代码很烂，潜在的Bugs不少
 
 ###如何使用？
 1. 安装Python环境(推荐Python 2.7)
@@ -16,9 +16,12 @@ SeuJwcFucker是一个辅助同学们在东南大学选课系统中顺利选课�
 
 ###版权信息
 本工具遵循 [WTFPL V2](http://www.wtfpl.net/txt/copying/) 协议
+
+***
+
 ###What is the SeuJwcFker?
 SeuJwcFker is a tool that helps  students in SEU to efficiently regsiter their courses.
-***
+
 
 ###What can it do?
 It can help you to login into the course registering system, and register the courses if there are left courses.
