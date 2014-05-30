@@ -7,31 +7,62 @@ import urllib
 import urllib2  
 import cookielib  
 import string  
-import re  
+import re
+import time
+
+
+#####参数#####
+userName = '213111111'  #一卡通号
+passWord = '111111'  #一卡通号
+semester = 2            #学期编号，短学期为1，长学期为2
+sleepTime = 2           #每尝试选课一次，延迟的时间，单位秒（0为不休眠，小心被T）
+#####参数#####
+
+
+def postXuan(id1,id2,id3):
+    hosturl ='http://xk.urp.seu.edu.cn'
+    posturl = 'http://xk.urp.seu.edu.cn/jw_css/xk/runSelectclassSelectionAction.action?select_jxbbh='+id1+'&select_xkkclx='+id2+'&select_jhkcdm='+id3
+    headers = { 'Host' : 'xk.urp.seu.edu.cn',
+            'Proxy-Connection' : 'keep-alive',
+            'Content-Length' : '2',
+            'Accept' : 'application/json, text/javascript, */*',
+            'Origin':'http://xk.urp.seu.edu.cn',
+           'X-Requested-With': 'XMLHttpRequest',
+            'User-Agent' : 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:14.0) Gecko/20100101 Firefox/14.0.1',
+          }
+    postData = {'{}':''
+        }
+    postData = urllib.urlencode(postData)
+    request = urllib2.Request(posturl, postData, headers)
+    response = urllib2.urlopen(request)  
+    text = response.read().decode('utf-8')  
+    print text
+    return
+
   
 #登录的主页面  
 hosturl = 'http://xk.urp.seu.edu.cn/' 
 #post数据接收和处理的页面（我们要向这个页面发送我们构造的Post数据）  
 posturl = 'http://xk.urp.seu.edu.cn/jw_css/system/login.action' 
   
-#设置一个cookie处理器，它负责从服务器下载cookie到本地，并且在发送请求时带上本地的cookie  
+#设置一个cookie处理器
 cj = cookielib.LWPCookieJar()
 cookie_support = urllib2.HTTPCookieProcessor(cj)
 opener = urllib2.build_opener(cookie_support, urllib2.HTTPHandler)  
 urllib2.install_opener(opener)  
   
-#打开登录主页面（他的目的是从页面下载cookie，这样我们在再送post数据时就有cookie了，否则发送不成功）  
-h = urllib2.urlopen(hosturl)
+ 
+h = urllib2.urlopen(hosturl)                                            #打开登录主页面，装载cookie 
 image = urllib2.urlopen('http://xk.urp.seu.edu.cn/jw_css/getCheckCode')
 f = open('code.jpg', 'wb')
 f.write(image.read())
 f.close()
 
-code = raw_input('打开code.jpg 输入里面的字符')
+code = raw_input('我眼睛不好，帮我看个东西吧。请打开我所在目录下的code.jpg，并在这里敲入里面的四位数字\n')
 
-
+#登录的包：
 #构造header
-headers = { 'Host' : 'xk.urp.seu.edu.cn',
+headers = { 'Host' : 'xk.urp.seu.edu.cn',   
             'Proxy-Connection' : 'keep-alive',
             'Origin' : 'http://xk.urp.seu.edu.cn',
             'User-Agent' : 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:14.0) Gecko/20100101 Firefox/14.0.1',
@@ -40,21 +71,64 @@ headers = { 'Host' : 'xk.urp.seu.edu.cn',
            }  
 #构造Post数据 
 postData = {
-            'userId' : '213111111', #你的用户名  
-            'userPassword' : '11111111', #你的密码，  
-            'checkCode' : code,   #验证码 
-            'x' : '33',  #别管
+            'userId' : userName,       #你的用户名  
+            'userPassword' : passWord, #你的密码，  
+            'checkCode' : code,           #验证码 
+            'x' : '33',     #别管
             'y' : '5'       #别管2
   
-            }  
-  
-#需要给Post数据编码  
-postData = urllib.urlencode(postData)  
-  
-#通过urllib2提供的request方法来向指定Url发送我们构造的数据，并完成登录过程  
+            }
 
-request = urllib2.Request(posturl, postData, headers)
-print request
+print('我在帮你登陆..')
+postData = urllib.urlencode(postData)  #Post数据编码   
+request = urllib2.Request(posturl, postData, headers)#通过urllib2提供的request方法来向指定Url发送我们构造的数据，并完成登录过程 
 response = urllib2.urlopen(request)  
 text = response.read().decode('utf-8')  
-print text  
+#print text
+
+
+####################################################################
+#构造择学期的包：
+####################################################################
+print('登录成功，我去打六秒的盹..免得jwc说我操作过快')
+time.sleep(6)      #防止出现'操作过快'提示
+xq = str(semester)           #学期
+geturl = 'http://xk.urp.seu.edu.cn/jw_css/xk/runXnXqmainSelectClassAction.action?Wv3opdZQ89ghgdSSg9FsgG49koguSd2fRVsfweSUj=Q89ghgdSSg9FsgG49koguSd2fRVs&selectXn=2014&selectXq='+xq+'&selectTime=2014-05-30%2013:30~2014-06-07%2023:59'
+hosturl = 'xk.urp.seu.edu.cn'
+headers = { 'Host' : 'xk.urp.seu.edu.cn',
+            'Proxy-Connection' : 'keep-alive',
+            'Accept' : 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+            'User-Agent' : 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:14.0) Gecko/20100101 Firefox/14.0.1',        
+           }
+getData = {}
+print('我在给你选择学期..')
+getData = urllib.urlencode(getData)
+request = urllib2.Request(geturl, getData, headers)
+response = urllib2.urlopen(request)
+text = response.read().decode('utf-8')  
+#print text
+
+#########################
+#匹配可以“服从推荐”，并且没有选上的课程
+#########################
+print('我开始给你自动刷课了!')
+pattern = re.compile(r'\" onclick=\"selectThis\(\'.*\'')
+#pattern = re.compile(r'selectThis')
+while True:
+    pos=0
+    m=pattern.search(text,pos)
+    while m:
+        pos=m.end()
+        tempText = m.group()
+        id1 = tempText[23:31]       #第一个编号
+        id2 = tempText[34:51]       #第二个编号
+        id3 = tempText[54:56]       #第三个编号
+        postXuan(id2,id3,id1)       #发送选课包
+        time.sleep(sleepTime)
+        m=pattern.search(text,pos)  #寻找下一个
+
+
+       
+
+
+
