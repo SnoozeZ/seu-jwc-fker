@@ -12,16 +12,16 @@ import time
 
 
 #####参数#####
-userName = '213111111'  #一卡通号
-passWord = '111111'  #一卡通号
+userName = '213111455'  #一卡通号
+passWord = 'ft4969464'  #一卡通号
 semester = 2            #学期编号，短学期为1，长学期为2
-sleepTime = 2           #每尝试选课一次，延迟的时间，单位秒（0为不休眠，小心被T）
+sleepTime = 1          #每尝试选课一次，延迟的时间，单位秒（0为不休眠，小心被T）
 #####参数#####
 
 
-def postXuan(id1,id2,id3):
+def postXuan(course):
     hosturl ='http://xk.urp.seu.edu.cn'
-    posturl = 'http://xk.urp.seu.edu.cn/jw_css/xk/runSelectclassSelectionAction.action?select_jxbbh='+id1+'&select_xkkclx='+id2+'&select_jhkcdm='+id3
+    posturl = 'http://xk.urp.seu.edu.cn/jw_css/xk/runSelectclassSelectionAction.action?select_jxbbh='+course[1]+'&select_xkkclx='+course[2]+'&select_jhkcdm='+course[0]
     headers = { 'Host' : 'xk.urp.seu.edu.cn',
             'Proxy-Connection' : 'keep-alive',
             'Content-Length' : '2',
@@ -36,9 +36,19 @@ def postXuan(id1,id2,id3):
     request = urllib2.Request(posturl, postData, headers)
     response = urllib2.urlopen(request)  
     text = response.read().decode('utf-8')  
-    print text
-    return
+ #   print text
+    return text
 
+def stateCheck(text):
+    
+    if (text.find(u'成功选择') != -1)or(text.find(u'服从推荐') != -1):
+        return 0
+    if text.find(u'已满') != -1:
+        return 1
+    if text.find(u'失败') != -1:
+        return 2
+    
+    
   
 #登录的主页面  
 hosturl = 'http://xk.urp.seu.edu.cn/' 
@@ -112,20 +122,40 @@ text = response.read().decode('utf-8')
 #匹配可以“服从推荐”，并且没有选上的课程
 #########################
 print('我开始给你自动刷课了!')
+courseLish = []
 pattern = re.compile(r'\" onclick=\"selectThis\(\'.*\'')
 #pattern = re.compile(r'selectThis')
+pos=0
+m=pattern.search(text,pos)
+while m:
+    pos=m.end()
+    tempText = m.group()
+    id1 = tempText[23:31]       #第一个编号
+    id2 = tempText[34:51]       #第二个编号
+    id3 = tempText[54:56]       #第三个编号
+    course = [id1,id2,id3,1]
+    courseLish.append(course)
+    m=pattern.search(text,pos)  #寻找下一个
+
+times = 0
+success = 0
 while True:
-    pos=0
-    m=pattern.search(text,pos)
-    while m:
-        pos=m.end()
-        tempText = m.group()
-        id1 = tempText[23:31]       #第一个编号
-        id2 = tempText[34:51]       #第二个编号
-        id3 = tempText[54:56]       #第三个编号
-        postXuan(id2,id3,id1)       #发送选课包
+    times = times+1
+    print "\n第"+str(times)+"次选课，已经成功选择"+str(success)+"门"
+
+    for course in courseLish:     
+        if course[3] == 1:
+            back = postXuan(course)       #发送选课包
+            flag = stateCheck(back)
+            if 0 == flag:
+                course[3] = 0
+                success = success+1
+                print '课程'+str(course[0])+" 选择成功"
+            if 1 == flag:
+                print '课程'+str(course[0])+" 名额已满"
+            if 2 == flag:
+                print '课程'+str(course[0])+" 选课失败，原因未知"
         time.sleep(sleepTime)
-        m=pattern.search(text,pos)  #寻找下一个
 
 
        
