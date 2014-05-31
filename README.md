@@ -5,14 +5,18 @@ SeuJwcFker
 SeuJwcFker是一个辅助同学们在东南大学选课系统中顺利选课的工具。
 ###SeuJwcFker目前能实现什么功能？
 可以登录选课系统，当发现“服从推荐”的课程有剩余时，本工具会帮你选上。
+
 ###SeuJwcFker还需要改进的地方：
-* 需要验证码识别技术，以支持更多的课程类型（目前只支持可以“服从推荐”的课程）
-* 匆忙中完成beta版，代码很烂，潜在的Bugs不少
+* 支持人文、自然类课程的值守
+* 支持用户指定课程的值守
+
 
 ###如何使用？
 1. 安装Python环境(推荐Python 2.7)
-2. 使用文本编辑器打开fk_jwc.py，填写你的一卡通和密码
-3. 终端下进入SeuJwcFker所在文件夹，执行python fk_jwc.py
+2. 终端下进入SeuJwcFker所在文件夹，执行_ python seu_jwc_fker.py _，然后根据提示操作
+
+###更新记录
+1. 2014-05-31 代码重写，优化交互
 
 ###版权信息
 本工具遵循 [WTFPL V2](http://www.wtfpl.net/txt/copying/) 协议
@@ -32,8 +36,7 @@ It can help you to login into the course registering system, and register the co
 
 ###How to use? 
 1. Install Python development environment. Python 2.7 is recommend.
-2. Open fk_jwc.py with your favorite text editer, fill in your ID and PASSWORD.
-3. Execute python fk_jwc.py in your terminal
+2. Execute _python seu_jwc_fker.py _ in your terminal and then follow the instruction.
 
 ###License
 Licensed under [WTFPL v2](http://www.wtfpl.net/txt/copying/) unless otherwise specified.
