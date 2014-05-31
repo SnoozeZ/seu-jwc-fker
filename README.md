@@ -18,6 +18,7 @@ SeuJwcFker是一个辅助同学们在东南大学选课系统中顺利选课的�
 ###更新记录
 1. 2014-05-31 代码重写，优化交互
 
+
 ###版权信息
 本工具遵循 [WTFPL V2](http://www.wtfpl.net/txt/copying/) 协议
 
