@@ -13,7 +13,7 @@ SeuJwcFker是一个辅助同学们在东南大学选课系统中顺利选课的�
 
 ###如何使用？
 1. 安装Python环境(推荐Python 2.7)
-2. 终端下进入SeuJwcFker所在文件夹，执行_ python seu_jwc_fker.py _，然后根据提示操作
+2. 终端下进入SeuJwcFker所在文件夹，执行 *python seu_jwc_fker.py*，然后根据提示操作
 
 ###更新记录
 1. 2014-05-31 代码重写，优化交互
@@ -36,7 +36,7 @@ It can help you to login into the course registering system, and register the co
 
 ###How to use? 
 1. Install Python development environment. Python 2.7 is recommend.
-2. Execute _python seu_jwc_fker.py _ in your terminal and then follow the instruction.
+2. Execute *python seu_jwc_fker.py* in your terminal and then follow the instruction.
 
 ###License
 Licensed under [WTFPL v2](http://www.wtfpl.net/txt/copying/) unless otherwise specified.
