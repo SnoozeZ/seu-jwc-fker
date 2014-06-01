@@ -1,3 +1,7 @@
+# -*- coding: utf-8 -*-
+#!/usr/bin/python  
+#import urllib.request
+
 ########################################################################
 #           DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE
 #                   Version 2, December 2004
@@ -14,9 +18,7 @@
 #            0. You just DO WHAT THE FUCK YOU WANT TO.
 ########################################################################
 
-# -*- coding: utf-8 -*-
-#!/usr/bin/python  
-#import urllib.request
+
 import HTMLParser  
 import urlparse  
 import urllib  
