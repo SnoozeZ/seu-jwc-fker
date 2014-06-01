@@ -1,3 +1,19 @@
+########################################################################
+#           DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE
+#                   Version 2, December 2004
+#
+#       Copyright (C) 2004 Sam Hocevar <sam@hocevar.net>
+#
+#   Everyone is permitted to copy and distribute verbatim or modified
+#   copies of this license document, and changing it is allowed as long
+#   as the name is changed.
+#
+#           DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE
+#  TERMS AND CONDITIONS FOR COPYING, DISTRIBUTION AND MODIFICATION
+#
+#            0. You just DO WHAT THE FUCK YOU WANT TO.
+########################################################################
+
 # -*- coding: utf-8 -*-
 #!/usr/bin/python  
 #import urllib.request
@@ -183,15 +199,99 @@ def Mode2(semesterNum,courseName):
         text = text.encode('utf-8')
         pattern2 = ('已选(.{0,200})align=\"').decode('gbk').encode('utf-8')
         result = re.findall(pattern2,text,re.S)
+        #print result
         success = len(result) #为0为不成功 继续
-        if 0 != success:
+        if (0 != success)and(result[0].find(courseNo)!=-1):
             print "Nice，已经选到课程:"+courseNo
             break
         #发送选课包
         print "第"+str(times)+"次尝试选择课程"+courseNo+",但是没选到！"
         postData(posturl,headers,data)
-
     return 
+def postRw(courseNo):
+    posturl = 'http://xk.urp.seu.edu.cn/jw_css/xk/runSelectclassSelectionAction.action?select_jxbbh='+courseNo+'&select_xkkclx=45&select_jhkcdm=00034&select_mkbh=rwskl'
+    headers = { 
+                'Host' : 'xk.urp.seu.edu.cn',
+                'Proxy-Connection' : 'keep-alive',
+                'Content-Length' : '2',
+                'Accept' : 'application/json, text/javascript, */*',
+                'Origin':'http://xk.urp.seu.edu.cn',
+                'X-Requested-With': 'XMLHttpRequest',
+                'User-Agent' : 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:14.0) Gecko/20100101 Firefox/14.0.1',
+                }
+    data = {
+            '{}':''
+            }
+    text = postData(posturl,headers,data)
+    return text
+def checkRwState(text):
+    text = text.encode('gbk')
+    if text.find('true') != -1:  #选课成功
+        return 0
+    if text.find('名额已满') != -1:
+        return 1
+    if text.find('冲突') != -1:
+        return 2
+    return
+def Mode3(semester):
+    s =  semester
+    text = selectSemester(s)
+    print "==============\n模式3，开始选课\n=============="
+    #获取人文课页面
+    geturl1 = 'http://xk.urp.seu.edu.cn/jw_css/xk/runViewsecondSelectClassAction.action?select_jhkcdm=00034&select_mkbh=rwskl&select_xkkclx=45&select_dxdbz=0'
+    header1 = {
+                'Host' : 'xk.urp.seu.edu.cn',
+                'Proxy-Connection' : 'keep-alive',
+                'Accept' : 'application/json, text/javascript, */*',
+                'User-Agent' : 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:14.0) Gecko/20100101 Firefox/14.0.1',
+                }   
+    data1 = {}
+    text = getData(geturl1,header1,data1)
+    text = text.encode('utf-8')
+    #获取所有的课程编号
+    pattern = ('\"8%\" id=\"(.{0,20})\" align').decode('gbk').encode('utf-8')
+    courseList = re.findall(pattern,text,re.S)
+    #print courseList 
+    courseCtList =[]
+    #找出并去掉冲突的课程
+    for course in courseList:
+        backText = postRw(course)
+        state = checkRwState(backText)
+        if state == 2:
+            courseCtList.append(course)
+        if state == 0:
+            print "Nice 选到了一门课："+course
+            return   #成功了
+    #print courseCtList
+    courseTemp = [i for i in courseList if (i not in courseCtList)]
+    #print courseTemp
+    times = 0
+    while True:
+        times = times + 1
+        #找出已满的课程
+        pattern = ('已满.+?(\"8%\" id=\")(.{0,20})\" align').decode('gbk').encode('utf-8')
+        courseYmList = [i[1] for i in re.findall(pattern,text,re.S)]
+        #print courseYmList
+        #找出可以选的课程编号
+        courseAva = [i for i in courseTemp if (i not in courseYmList) ]
+        print courseAva
+        #选课了
+        if len(courseAva) == 0:
+                    print "第"+str(times)+"次刷新，每门课都选不了.."
+        else:
+            for course in courseAva:
+                state = checkRwState(postRw(course))
+                if 0 == state:
+                    print "Nice 选到了一门课："+course
+                    return
+                if 1 == state:
+                    print "人品不好 眼皮子底下的课被抢了"
+        #刷新人文选课界面
+        text = getData(geturl1,header1,data1)
+        text = text.encode('utf-8')
+        time.sleep(2)
+
+    
 
 
 if __name__ == "__main__":
@@ -201,10 +301,11 @@ if __name__ == "__main__":
     print "     访问 github.com/SnoozeZ/seu_jwc_fker 以了解本工具的最新动态"
     print "===================================================================== "
     print "请选择模式："
-    print "1. 只值守主界面的所有“服从推荐”课程"
-    print "2. 只值守子界面“人文社科类”中的指定一门课程"
-    print "3. 只值守子界面“自然科学与技术科学类”中的指定一门课程（开发中）"
-    print "4. 输入指定任意门课程的名字并值守（课程类型不限）（开发中）"
+    print "1. 同院竞争臭表脸模式：只值守主界面本院的所有“服从推荐”课程"
+    print "2. 孤注一掷模式：只值守子界面“人文社科类”中你指定一门课程"
+    print "3. 暴力模式：值守子界面“人文社科类”任意一门课程，有剩余就选上"
+    #print "4. 只值守子界面“自然科学与技术科学类”中的指定一门课程（开发中）"
+    #print "5. 输入指定任意门课程的名字并值守（课程类型不限）（开发中）"
     mode = input('\n请输入模式编号(如:1)：')
     userId = raw_input('请输入一卡通号(如:213111111)：')
     passWord = raw_input('请输入密码(如:65535)：')
@@ -213,6 +314,9 @@ if __name__ == "__main__":
         loginIn(userId,passWord)
         Mode1(semester)
     if 2 == mode:
-        courseName = raw_input('请输入你想值守的人文课名称或者其关键词（如:语文）：')
+        courseName = raw_input('请输入你想值守的人文课名称或者其关键词（如:音乐鉴赏）：')
         loginIn(userId,passWord)
         Mode2(semester,courseName)
+    if 3 == mode:
+        loginIn(userId,passWord)
+        Mode3(semester)
