@@ -14,13 +14,23 @@ SeuJwcFker是一个辅助同学们在东南大学选课系统中顺利选课的�
 * 支持任意门用户指定课程的值守
 
 ###如何使用？
+方法一：使用封装好的.exe文件(**不需python环境**)
+
+1. [点击这里](http://www.baidu.com)下载工具压缩包
+2. 解压下载下来的压缩包，运行其中的"seu_jwc_fker.exe"，然后根据提示操作
+
+方法二：直接使用python脚本
+
 1. 安装Python环境(推荐Python 2.7)
-2. 终端下进入SeuJwcFker所在文件夹，执行 *python seu_jwc_fker.py*，然后根据提示操作
+2. [点击这里]("https://raw.githubusercontent.com/SnoozeZ/seu-jwc-fker/master/seu_jwc_fker.py")下载脚本，python解释器中运行之，然后根据提示操作
+
+
 
 ###更新记录
 0. 2014-05-30 创世，实现同院竞争臭表脸模式
 1. 2014-05-31 代码重写，优化交互，实现人文类课程的孤注一掷模式
 2. 2014-06-01 实现人文类课程的暴力模式
+3. 2014-09-02 将py脚本封装成为.exe格式，方便无python环境的用户使用
 
 
 ###版权信息
