@@ -1,5 +1,16 @@
 SeuJwcFker
 ============
+###如何使用？
+方法一：使用封装好的.exe文件(**不需python环境**)
+
+1. [点击这里](https://github.com/SnoozeZ/seu-jwc-fker/raw/master/seu_jwc_fker.rar)下载工具压缩包
+2. 解压下载下来的压缩包，运行其中的"seu_jwc_fker.exe"，然后根据提示操作
+
+方法二：直接使用python脚本
+
+1. 安装Python环境(推荐Python 2.7)
+2. [点击这里](https://raw.githubusercontent.com/SnoozeZ/seu-jwc-fker/master/seu_jwc_fker.py)下载脚本，python解释器中运行之，然后根据提示操作
+
 
 ###SeuJwcFker是什么？
 SeuJwcFker是一个辅助同学们在东南大学选课系统中顺利选课的工具。
@@ -12,17 +23,6 @@ SeuJwcFker是一个辅助同学们在东南大学选课系统中顺利选课的�
 ###SeuJwcFker还需要改进的地方：
 * 支持任意用户指定的一门~~人文社科类~~、自然类课程的值守
 * 支持任意门用户指定课程的值守
-
-###如何使用？
-方法一：使用封装好的.exe文件(**不需python环境**)
-
-1. [点击这里](http://www.baidu.com)下载工具压缩包
-2. 解压下载下来的压缩包，运行其中的"seu_jwc_fker.exe"，然后根据提示操作
-
-方法二：直接使用python脚本
-
-1. 安装Python环境(推荐Python 2.7)
-2. [点击这里]("https://raw.githubusercontent.com/SnoozeZ/seu-jwc-fker/master/seu_jwc_fker.py")下载脚本，python解释器中运行之，然后根据提示操作
 
 
 
