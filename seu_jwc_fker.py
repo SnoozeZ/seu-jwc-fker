@@ -128,7 +128,7 @@ def Mode1(semesterNum):
     while True:
         if total == 0:
             break
-        time.sleep(1.5)
+        time.sleep(5)#sleep
         times = times +1
         print "\n第"+str(times)+"次选课，已经成功选择"+str(success)+"门"
         for course in courseList:
@@ -209,6 +209,7 @@ def Mode2(semesterNum,courseName):
         #发送选课包
         print "第"+str(times)+"次尝试选择课程"+courseNo+",但是没选到！"
         postData(posturl,headers,data)
+        time.sleep(5)#sleep
     return 
 def postRw(courseNo):
     posturl = 'http://xk.urp.seu.edu.cn/jw_css/xk/runSelectclassSelectionAction.action?select_jxbbh='+courseNo+'&select_xkkclx=45&select_jhkcdm=00034&select_mkbh=rwskl'
@@ -291,7 +292,7 @@ def Mode3(semester):
         #刷新人文选课界面
         text = getData(geturl1,header1,data1)
         text = text.encode('utf-8')
-        time.sleep(2)
+        time.sleep(5)
 
     
 
