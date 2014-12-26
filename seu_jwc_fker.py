@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+# -*- coding: gbk -*-
 #!/usr/bin/python  
 #import urllib.request
 
@@ -312,7 +312,7 @@ if __name__ == "__main__":
     mode = input('\n请输入模式编号(如:1)：')
     userId = raw_input('请输入一卡通号(如:213111111)：')
     passWord = raw_input('请输入密码(如:65535)：')
-    semester = input('请输入学期编号(短学期为1，长学期为2)：')
+    semester = input('请输入学期编号(短学期为1，秋季学期为2，春季学期为3)：')
     if 1 == mode:
         loginIn(userId,passWord)
         Mode1(semester)
@@ -323,3 +323,4 @@ if __name__ == "__main__":
     if 3 == mode:
         loginIn(userId,passWord)
         Mode3(semester)
+    input('按任意键退出'）
