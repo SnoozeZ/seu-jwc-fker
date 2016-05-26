@@ -35,6 +35,7 @@ SeuJwcFker是一个辅助同学们在东南大学选课系统中顺利选课的�
 
 
 ###其他
+欢迎pull-request，虽然我知道当年这个代码写得很烂...
 使用中若遇到问题请提交issue或联系Email: zhangweiqi357@gmail.com
 
 本工具遵循 [WTFPL V2](http://www.wtfpl.net/txt/copying/) 协议
