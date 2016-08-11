@@ -75,9 +75,12 @@ def loginIn(userName,passWord):
             }
             
     #post登录数据
-    text = postData(posturl,header,data)
-    print "登录成功"
-    return (True, text)
+    (status, text) = postData(posturl,header,data)
+    if status == True:
+        print "登录成功"
+    else:
+        print "fail to login"
+    return (status, text)
 
 def selectSemester(semesterNum):
     print "切换学期菜单中......"
@@ -176,17 +179,23 @@ def Mode1(semesterNum):
                 data = {'{}':''
                 }
                 #post选课包，并获取返回状态
-                flag = stateCheck(postData(posturl,headers,data))
+                (status, text) = postData(posturl,headers,data)
+                if status == False:
+                    flag = 3
+                else:
+                    flag = stateCheck(text)
                 #根据选课状态返回信息
-                if 0 == flag:
+                if flag == 0:
                     course[3] = 0
                     success = success + 1
                     total = total - 1
                     print 'Nice, 课程'+str(course[0])+" 选择成功"
-                if 1 == flag:
+                elif flag == 1:
                     print '课程'+str(course[0])+" 名额已满"
-                if 2 == flag:
+                elif flag == 2:
                     print '课程'+str(course[0])+" 选课失败，原因未知"
+                elif flag == 3:
+                    print 'fail to select course'+str(course[0])+'due to network error'
        
 def Mode2(semesterNum,courseName):
     s =  semesterNum
@@ -343,14 +352,15 @@ if __name__ == "__main__":
     userId = raw_input('请输入一卡通号(如:213111111)：')
     passWord = raw_input('请输入密码(如:65535)：')
     semester = input('请输入学期编号(短学期为1，秋季学期为2，春季学期为3)：')
-    if 1 == mode:
-        loginIn(userId,passWord)
-        Mode1(semester)
-    if 2 == mode:
-        courseName = raw_input('请输入你想值守的人文课名称或者其关键词（如:音乐鉴赏）：')
-        loginIn(userId,passWord)
-        Mode2(semester,courseName)
-    if 3 == mode:
-        loginIn(userId,passWord)
-        Mode3(semester)
+    (status, text) = loginIn(userId,passWord)
+    if status == True:
+        if 1 == mode:
+            Mode1(semester)
+        if 2 == mode:
+            courseName = raw_input('请输入你想值守的人文课名称或者其关键词（如:音乐鉴赏）：')
+            Mode2(semester,courseName)
+        if 3 == mode:
+            Mode3(semester)
+    else:
+        print "plz quit and try again"
     input(u'按任意键退出')
