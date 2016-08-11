@@ -38,9 +38,20 @@ def loginIn(userName,passWord):
     opener = urllib2.build_opener(cookie_support, urllib2.HTTPHandler)  
     urllib2.install_opener(opener)  
     #打开选课页面
-    h = urllib2.urlopen('http://xk.urp.seu.edu.cn/', timeout = 5) 
+    h = urllib2.urlopen('http://xk.urp.seu.edu.cn/', timeout = 5)   # is this really necessary?
     #获取验证码
-    image = urllib2.urlopen('http://xk.urp.seu.edu.cn/jw_css/getCheckCode', timeout = 5)
+    
+    for i in range(10):
+        try:
+            image = urllib2.urlopen('http://xk.urp.seu.edu.cn/jw_css/getCheckCode', timeout = 5)
+            break
+        except Exception, e:
+            print 'an error occur while loading the image'
+            print 'trying to load agian...'
+            continue
+    else:
+        return ''
+
     f = open('code.jpg','wb')
     f.write(image.read())
     f.close()
@@ -72,6 +83,7 @@ def selectSemester(semesterNum):
     print "切换学期菜单中......"
     time.sleep(5)
     #构造选择学期的包
+    # NOTICE: SELECTTIME manually set this url is not a wise choice
     geturl ='http://xk.urp.seu.edu.cn/jw_css/xk/runXnXqmainSelectClassAction.action?Wv3opdZQ89ghgdSSg9FsgG49koguSd2fRVsfweSUj=Q89ghgdSSg9FsgG49koguSd2fRVs&selectXn=2014&selectXq='+str(semesterNum)+'&selectTime=2014-05-30%2013:30~2014-06-07%2023:59'
     header = {  'Host' : 'xk.urp.seu.edu.cn',
                 'Proxy-Connection' : 'keep-alive',
@@ -86,15 +98,33 @@ def selectSemester(semesterNum):
 def postData(posturl,headers,postData):
     postData = urllib.urlencode(postData)  #Post数据编码   
     request = urllib2.Request(posturl, postData, headers)#通过urllib2提供的request方法来向指定Url发送我们构造的数据，并完成登录过程 
-    response = urllib2.urlopen(request, timeout = 5)  
-    text = response.read().decode('utf-8')
+    for i in range(10):
+        try:
+            response = urllib2.urlopen(request, timeout = 5)
+            text = response.read().decode('utf-8')
+            break
+        except Exception, e:
+            print 'fail to get response'
+            print 'trying to open agian...'
+            continue
+    else:
+        return ''
     return text
 
 def getData(geturl,header,getData):
     getData = urllib.urlencode(getData)
     request = urllib2.Request(geturl, getData, header)
-    response = urllib2.urlopen(request， timeout = 5)
-    text = response.read().decode('utf-8') 
+    for i in range(10):
+        try:
+            response = urllib2.urlopen(request， timeout = 5)
+            text = response.read().decode('utf-8') 
+            break
+        except Exception, e:
+            print 'fail to get response'
+            print 'trying to open agian...'
+            continue
+    else:
+        return ''
     return text
 
 def stateCheck(textValue):    
