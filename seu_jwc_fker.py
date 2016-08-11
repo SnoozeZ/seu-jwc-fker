@@ -50,7 +50,7 @@ def loginIn(userName,passWord):
             print 'trying to load agian...'
             continue
     else:
-        return ''
+        return (False, 'fail to get capthca')
 
     f = open('code.jpg','wb')
     f.write(image.read())
@@ -77,13 +77,13 @@ def loginIn(userName,passWord):
     #post登录数据
     text = postData(posturl,header,data)
     print "登录成功"
-    return text
+    return (True, text)
 
 def selectSemester(semesterNum):
     print "切换学期菜单中......"
     time.sleep(5)
     #构造选择学期的包
-    # NOTICE: SELECTTIME manually set this url is not a wise choice
+    # !!!NOTICE: SELECTTIME manually set this url is not a wise choice
     geturl ='http://xk.urp.seu.edu.cn/jw_css/xk/runXnXqmainSelectClassAction.action?Wv3opdZQ89ghgdSSg9FsgG49koguSd2fRVsfweSUj=Q89ghgdSSg9FsgG49koguSd2fRVs&selectXn=2014&selectXq='+str(semesterNum)+'&selectTime=2014-05-30%2013:30~2014-06-07%2023:59'
     header = {  'Host' : 'xk.urp.seu.edu.cn',
                 'Proxy-Connection' : 'keep-alive',
@@ -93,7 +93,7 @@ def selectSemester(semesterNum):
     data = {}
     #get获取学期课程
     text = getData(geturl,header,data)
-    return text
+    return (True, text)
 
 def postData(posturl,headers,postData):
     postData = urllib.urlencode(postData)  #Post数据编码   
@@ -108,8 +108,8 @@ def postData(posturl,headers,postData):
             print 'trying to open agian...'
             continue
     else:
-        return ''
-    return text
+        return (False, 'fail to post data')
+    return (True, test)
 
 def getData(geturl,header,getData):
     getData = urllib.urlencode(getData)
@@ -124,8 +124,8 @@ def getData(geturl,header,getData):
             print 'trying to open agian...'
             continue
     else:
-        return ''
-    return text
+        return (False, 'fail to get data')
+    return (True, text)
 
 def stateCheck(textValue):    
     text = textValue.encode('gbk')
