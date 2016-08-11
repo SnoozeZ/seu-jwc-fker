@@ -38,9 +38,9 @@ def loginIn(userName,passWord):
     opener = urllib2.build_opener(cookie_support, urllib2.HTTPHandler)  
     urllib2.install_opener(opener)  
     #打开选课页面
-    h = urllib2.urlopen('http://xk.urp.seu.edu.cn/') 
+    h = urllib2.urlopen('http://xk.urp.seu.edu.cn/', timeout = 5) 
     #获取验证码
-    image = urllib2.urlopen('http://xk.urp.seu.edu.cn/jw_css/getCheckCode')
+    image = urllib2.urlopen('http://xk.urp.seu.edu.cn/jw_css/getCheckCode', timeout = 5)
     f = open('code.jpg','wb')
     f.write(image.read())
     f.close()
@@ -86,14 +86,14 @@ def selectSemester(semesterNum):
 def postData(posturl,headers,postData):
     postData = urllib.urlencode(postData)  #Post数据编码   
     request = urllib2.Request(posturl, postData, headers)#通过urllib2提供的request方法来向指定Url发送我们构造的数据，并完成登录过程 
-    response = urllib2.urlopen(request)  
+    response = urllib2.urlopen(request, timeout = 5)  
     text = response.read().decode('utf-8')
     return text
 
 def getData(geturl,header,getData):
     getData = urllib.urlencode(getData)
     request = urllib2.Request(geturl, getData, header)
-    response = urllib2.urlopen(request)
+    response = urllib2.urlopen(request， timeout = 5)
     text = response.read().decode('utf-8') 
     return text
 
@@ -323,4 +323,4 @@ if __name__ == "__main__":
     if 3 == mode:
         loginIn(userId,passWord)
         Mode3(semester)
-    input('按任意键退出'）
+    input(u'按任意键退出')
