@@ -281,7 +281,7 @@ def postRw(courseNo):
             '{}':''
             }
     (state, text) = postData(posturl,headers,data)
-    return text
+    return (state, text)
 def checkRwState(text):
     text = text.encode('gbk')
     if text.find('true') != -1:  #选课成功
@@ -313,8 +313,11 @@ def Mode3(semester):
     courseCtList =[]
     #找出并去掉冲突的课程
     for course in courseList:
-        backText = postRw(course)
-        state = checkRwState(backText)
+        (state, backText) = postRw(course)
+        if state == True:  # ewww bad name here
+            state = checkRwState(backText)
+        else:
+            state = -1  # network error or something else
         if state == 2:
             courseCtList.append(course)
         if state == 0:
