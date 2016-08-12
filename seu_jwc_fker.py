@@ -75,19 +75,24 @@ def loginIn(userName,passWord):
             }
             
     #post登录数据
-    (state, text) = postData(posturl,header,data)
+    (state, text, url) = postTOGetUrl(posturl,header,data)
     if state == True:
         print "登录成功"
     else:
         print "fail to login"
-    return (state, text)
+    return (state, text, url)
 
-def selectSemester(semesterNum):
+def selectSemester(semesterNum, url):
     print "切换学期菜单中......"
     time.sleep(5)
     #构造选择学期的包
     # !!!NOTICE: SELECTTIME manually set this url is not a wise choice
-    geturl ='http://xk.urp.seu.edu.cn/jw_css/xk/runXnXqmainSelectClassAction.action?Wv3opdZQ89ghgdSSg9FsgG49koguSd2fRVsfweSUj=Q89ghgdSSg9FsgG49koguSd2fRVs&selectXn=2014&selectXq='+str(semesterNum)+'&selectTime=2014-05-30%2013:30~2014-06-07%2023:59'
+    # geturl ='http://xk.urp.seu.edu.cn/jw_css/xk/runXnXqmainSelectClassAction.action?Wv3opdZQ89ghgdSSg9FsgG49koguSd2fRVsfweSUj=Q89ghgdSSg9FsgG49koguSd2fRVs&selectXn=2014&selectXq='+str(semesterNum)+'&selectTime=2014-05-30%2013:30~2014-06-07%2023:59'
+    
+    # this url is obtained from posting data
+    # !!!need to be tested
+    geturl = re.sub('selectXq=.', 'selectXq='+str(semesterNum), url)
+    
     header = {  'Host' : 'xk.urp.seu.edu.cn',
                 'Proxy-Connection' : 'keep-alive',
                 'Accept' : 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
@@ -105,6 +110,7 @@ def selectSemester(semesterNum):
 def postData(posturl,headers,postData):
     postData = urllib.urlencode(postData)  #Post数据编码   
     request = urllib2.Request(posturl, postData, headers)#通过urllib2提供的request方法来向指定Url发送我们构造的数据，并完成登录过程 
+    text = ''
     for i in range(10):
         try:
             response = urllib2.urlopen(request, timeout = 5)
@@ -118,9 +124,31 @@ def postData(posturl,headers,postData):
         return (False, 'fail to post data')
     return (True, test)
 
+    
+def postTOGetUrl(posturl, headers, postData):
+    ''' post data and return the url the page jumps to '''
+    postData = urllib.urlencode(postData)  #Post数据编码   
+    request = urllib2.Request(posturl, postData, headers)#通过urllib2提供的request方法来向指定Url发送我们构造的数据，并完成登录过程 
+    text = ''
+    url = ''
+    for i in range(10):
+        try:
+            response = urllib2.urlopen(request, timeout = 5)
+            text = response.read().decode('utf-8')
+            url = response.geturl()
+            break
+        except Exception, e:
+            print 'fail to get response'
+            print 'trying to open agian...'
+            continue
+    else:
+        return (False, 'fail to post data')
+    return (True, test, url)
+
 def getData(geturl,header,getData):
     getData = urllib.urlencode(getData)
     request = urllib2.Request(geturl, getData, header)
+    text = ''
     for i in range(10):
         try:
             response = urllib2.urlopen(request， timeout = 5)
@@ -144,9 +172,9 @@ def stateCheck(textValue):
     if text.find('失败') != -1:
         return 2
 
-def Mode1(semesterNum):
+def Mode1(semesterNum, url):
     # s =  semesterNum
-    (state, text) = selectSemester(semesterNum)
+    (state, text) = selectSemester(semesterNum, url)
     if state == False:
         print "not a good day for selecting courses"
         return
@@ -204,9 +232,9 @@ def Mode1(semesterNum):
                 elif flag == 3:
                     print 'fail to select course'+str(course[0])+'due to network error'
        
-def Mode2(semesterNum,courseName):
+def Mode2(semesterNum,courseName, url):
     # s = semesterNum
-    (state, text) = selectSemester(semesterNum)
+    (state, text) = selectSemester(semesterNum, url)
     if state == False:
         print "not a good day for selecting courses"
         return
@@ -291,9 +319,9 @@ def checkRwState(text):
     if text.find('冲突') != -1:
         return 2
     return -1
-def Mode3(semester):
-    s =  semester
-    text = selectSemester(s)
+def Mode3(semester, url):
+    # s =  semester
+    text = selectSemester(semesterNum, url)
     print "==============\n模式3，开始选课\n=============="
     #获取人文课页面
     geturl1 = 'http://xk.urp.seu.edu.cn/jw_css/xk/runViewsecondSelectClassAction.action?select_jhkcdm=00034&select_mkbh=rwskl&select_xkkclx=45&select_dxdbz=0'
@@ -371,15 +399,15 @@ if __name__ == "__main__":
     userId = raw_input('请输入一卡通号(如:213111111)：')
     passWord = raw_input('请输入密码(如:65535)：')
     semester = input('请输入学期编号(短学期为1，秋季学期为2，春季学期为3)：')
-    (state, text) = loginIn(userId,passWord)
+    (state, text, url) = loginIn(userId,passWord)
     if state == True:
         if 1 == mode:
-            Mode1(semester)
+            Mode1(semester, url)
         if 2 == mode:
             courseName = raw_input('请输入你想值守的人文课名称或者其关键词（如:音乐鉴赏）：')
-            Mode2(semester,courseName)
+            Mode2(semester,courseName, url)
         if 3 == mode:
-            Mode3(semester)
+            Mode3(semester, url)
     else:
         print "plz quit and try again"
     input(u'按任意键退出')
