@@ -75,12 +75,12 @@ def loginIn(userName,passWord):
             }
             
     #post登录数据
-    (status, text) = postData(posturl,header,data)
-    if status == True:
+    (state, text) = postData(posturl,header,data)
+    if state == True:
         print "登录成功"
     else:
         print "fail to login"
-    return (status, text)
+    return (state, text)
 
 def selectSemester(semesterNum):
     print "切换学期菜单中......"
@@ -95,8 +95,12 @@ def selectSemester(semesterNum):
     }
     data = {}
     #get获取学期课程
-    text = getData(geturl,header,data)
-    return (True, text)
+    (state, text) = getData(geturl,header,data)
+    if state == True:
+        print "successfully switch to semester"+str(semesterNum)
+    else:
+        print "failed to switch to semester"+str(semesterNum)
+    return (state, text)
 
 def postData(posturl,headers,postData):
     postData = urllib.urlencode(postData)  #Post数据编码   
@@ -141,8 +145,11 @@ def stateCheck(textValue):
         return 2
 
 def Mode1(semesterNum):
-    s =  semesterNum
-    text = selectSemester(s)
+    # s =  semesterNum
+    (state, text) = selectSemester(semesterNum)
+    if state == False:
+        print "not a good day for selecting courses"
+        return
     #寻找可以“服从推荐”的课程
     print "==============\n模式1，开始选课\n=============="
     courseList = []
@@ -165,7 +172,7 @@ def Mode1(semesterNum):
         times = times +1
         print "\n第"+str(times)+"次选课，已经成功选择"+str(success)+"门"
         for course in courseList:
-            if 1 == course[3]:
+            if course[3] == 1:
             #构造选课post
                 posturl = 'http://xk.urp.seu.edu.cn/jw_css/xk/runSelectclassSelectionAction.action?select_jxbbh='+course[1]+'&select_xkkclx='+course[2]+'&select_jhkcdm='+course[0]
                 headers = { 'Host' : 'xk.urp.seu.edu.cn',
@@ -179,8 +186,8 @@ def Mode1(semesterNum):
                 data = {'{}':''
                 }
                 #post选课包，并获取返回状态
-                (status, text) = postData(posturl,headers,data)
-                if status == False:
+                (state, text) = postData(posturl,headers,data)
+                if state == False:
                     flag = 3
                 else:
                     flag = stateCheck(text)
@@ -198,8 +205,11 @@ def Mode1(semesterNum):
                     print 'fail to select course'+str(course[0])+'due to network error'
        
 def Mode2(semesterNum,courseName):
-    s =  semesterNum
-    text = selectSemester(s)
+    # s = semesterNum
+    (state, text) = selectSemester(semesterNum)
+    if state == False:
+        print "not a good day for selecting courses"
+        return
     print "==============\n模式2，开始选课\n=============="
     #获取人文课页面
     geturl1 = 'http://xk.urp.seu.edu.cn/jw_css/xk/runViewsecondSelectClassAction.action?select_jhkcdm=00034&select_mkbh=rwskl&select_xkkclx=45&select_dxdbz=0'
@@ -210,7 +220,10 @@ def Mode2(semesterNum,courseName):
                 'User-Agent' : 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:14.0) Gecko/20100101 Firefox/14.0.1',
                 }   
     data1 = {}
-    text = getData(geturl1,header1,data1)
+    (state, text) = getData(geturl1,header1,data1)
+    if state == False:
+        print "something strange happened. maybe you should quit and try again..."
+        return
     #构造RE  
     #print text
     text = text.encode('utf-8') 
@@ -236,18 +249,21 @@ def Mode2(semesterNum,courseName):
     while True :
         #判断是否选到课
         times = times+1
-        text = getData(geturl1,header1,data1)
+        (state, text) = getData(geturl1,header1,data1)
+        if state == False:
+            print "fail to open the course list page. let us have another round"
+            continue
         text = text.encode('utf-8')
         pattern2 = ('已选(.{0,200})align=\"').decode('gbk').encode('utf-8')
         result = re.findall(pattern2,text,re.S)
         #print result
         success = len(result) #为0为不成功 继续
-        if (0 != success)and(result[0].find(courseNo)!=-1):
+        if (success != 0)and(result[0].find(courseNo)!=-1):
             print "Nice，已经选到课程:"+courseNo
             break
         #发送选课包
         print "第"+str(times)+"次尝试选择课程"+courseNo+",但是没选到！"
-        postData(posturl,headers,data)
+        (state, text) = postData(posturl,headers,data)
         time.sleep(5)#sleep
     return 
 def postRw(courseNo):
@@ -264,7 +280,7 @@ def postRw(courseNo):
     data = {
             '{}':''
             }
-    text = postData(posturl,headers,data)
+    (state, text) = postData(posturl,headers,data)
     return text
 def checkRwState(text):
     text = text.encode('gbk')
@@ -274,7 +290,7 @@ def checkRwState(text):
         return 1
     if text.find('冲突') != -1:
         return 2
-    return
+    return -1
 def Mode3(semester):
     s =  semester
     text = selectSemester(s)
@@ -329,7 +345,7 @@ def Mode3(semester):
                 if 1 == state:
                     print "人品不好 眼皮子底下的课被抢了"
         #刷新人文选课界面
-        text = getData(geturl1,header1,data1)
+        (state, text) = getData(geturl1,header1,data1)
         text = text.encode('utf-8')
         time.sleep(5)
 
@@ -352,8 +368,8 @@ if __name__ == "__main__":
     userId = raw_input('请输入一卡通号(如:213111111)：')
     passWord = raw_input('请输入密码(如:65535)：')
     semester = input('请输入学期编号(短学期为1，秋季学期为2，春季学期为3)：')
-    (status, text) = loginIn(userId,passWord)
-    if status == True:
+    (state, text) = loginIn(userId,passWord)
+    if state == True:
         if 1 == mode:
             Mode1(semester)
         if 2 == mode:
