@@ -28,8 +28,7 @@ import string
 import re
 import time
 import sys   
-reload(sys)  
-#sys.setdefaultencoding('gbk')
+reload(sys)
 
 def loginIn(userName,passWord):
     #设置cookie处理器
@@ -171,7 +170,7 @@ def getData(geturl,header,getData):
     return (True, text)
 
 def stateCheck(textValue):    
-    text = textValue.encode('gbk')
+    text = textValue.encode('utf-8')
     #if (text.find('成功选择') != -1)or(text.find('服从推荐') != -1):
     if (text.find('成功选择') != -1)or(text.find('服从推荐') != -1):
         return 0
@@ -263,7 +262,7 @@ def Mode2(semesterNum,courseName, url):
     #构造RE  
     #print text
     text = text.encode('utf-8') 
-    pattern = (courseName+'.*?(\"8%\" id=\"(.{0,20})\" align)').decode('gbk').encode('utf-8')
+    pattern = (courseName + u'.*?(\"8%\" id=\"(.{0,20})\" align)').encode('utf-8')  # possible problem here??
     #获取课程编号
     courseNo = re.findall(pattern,text,re.S)[0][1]
     #构造数据包
@@ -290,7 +289,7 @@ def Mode2(semesterNum,courseName, url):
             print "fail to open the course list page. let us have another round"
             continue
         text = text.encode('utf-8')
-        pattern2 = ('已选(.{0,200})align=\"').decode('gbk').encode('utf-8')
+        pattern2 = (u'已选(.{0,200})align=\"')..encode('utf-8')
         result = re.findall(pattern2,text,re.S)
         #print result
         success = len(result) #为0为不成功 继续
@@ -319,7 +318,7 @@ def postRw(courseNo):
     (state, text) = postData(posturl,headers,data)
     return (state, text)
 def checkRwState(text):
-    text = text.encode('gbk')
+    text = text.encode('utf-8')
     if text.find('true') != -1:  #选课成功
         return 0
     if text.find('名额已满') != -1:
@@ -349,7 +348,7 @@ def Mode3(semesterNum, url):
 
     text = text.encode('utf-8')
     #获取所有的课程编号
-    pattern = ('\"8%\" id=\"(.{0,20})\" align').decode('gbk').encode('utf-8')
+    pattern = (u'\"8%\" id=\"(.{0,20})\" align').encode('utf-8')
     courseList = re.findall(pattern,text,re.S)
     #print courseList 
     courseCtList =[]
@@ -372,7 +371,7 @@ def Mode3(semesterNum, url):
     while True:
         times = times + 1
         #找出已满的课程
-        pattern = ('已满.+?(\"8%\" id=\")(.{0,20})\" align').decode('gbk').encode('utf-8')
+        pattern = (u'已满.+?(\"8%\" id=\")(.{0,20})\" align')..encode('utf-8')
         courseYmList = [i[1] for i in re.findall(pattern,text,re.S)]
         #print courseYmList
         #找出可以选的课程编号
