@@ -55,7 +55,8 @@ def loginIn(userName,passWord):
 	f.write(image.read())
 	f.close()
 	#读取验证码
-	code = raw_input('请打开我所在目录下的code.jpg，并在这里敲入里面的四位数字验证码：')
+	code = raw_input(u'请打开我所在目录下的code.jpg，并在这里敲入里面的四位数字验证码：')
+    # code = raw_input(u'请打开我所在目录下的code.jpg，并在这里敲入里面的四位数字验证码：'.encode('gbk'))  # used for exporting to exe
 	#构造post数据
 	posturl = 'http://xk.urp.seu.edu.cn/jw_css/system/login.action' 
 	header ={   
@@ -77,7 +78,7 @@ def loginIn(userName,passWord):
 	(state, text) = postData(posturl,header,data)
 	url = ''
 	if state == True:
-		print "登录成功"
+		print u"登录成功"
 		function = re.search(r'onclick="changeXnXq.*\)"', text); # find the function whose parameter are wanted
 		function = function.group()		
 		parameters = re.search(r"'(.*)','(.*)','(.*)'\)", function)
@@ -88,7 +89,7 @@ def loginIn(userName,passWord):
 	return (state, text, url)
 
 def selectSemester(semesterNum, url):
-    print "切换学期菜单中......"
+    print u"切换学期菜单中......"
     time.sleep(5)
     #构造选择学期的包
     # !!!NOTICE: SELECTTIME manually set this url is not a wise choice
@@ -186,7 +187,7 @@ def Mode1(semesterNum, url):
         print "not a good day for selecting courses"
         return
     #寻找可以“服从推荐”的课程
-    print "==============\n模式1，开始选课\n=============="
+    print u"==============\n模式1，开始选课\n=============="
     courseList = []
     pattern = re.compile(r'\" onclick=\"selectThis\(\'.*\'')
     pos = 0
@@ -205,7 +206,7 @@ def Mode1(semesterNum, url):
             break
         time.sleep(5)#sleep
         times = times +1
-        print "\n第"+str(times)+"次选课，已经成功选择"+str(success)+"门"
+        print u"\n第"+str(times)+u"次选课，已经成功选择"+str(success)+u"门"
         for course in courseList:
             if course[3] == 1:
             #构造选课post
@@ -231,11 +232,11 @@ def Mode1(semesterNum, url):
                     course[3] = 0
                     success = success + 1
                     total = total - 1
-                    print 'Nice, 课程'+str(course[0])+" 选择成功"
+                    print u"Nice, 课程"+str(course[0])+u" 选择成功"
                 elif flag == 1:
-                    print '课程'+str(course[0])+" 名额已满"
+                    print u"课程"+str(course[0])+u" 名额已满"
                 elif flag == 2:
-                    print '课程'+str(course[0])+" 选课失败，原因未知"
+                    print u"课程"+str(course[0])+u" 选课失败，原因未知"
                 elif flag == 3:
                     print 'fail to select course'+str(course[0])+'due to network error'
        
@@ -245,7 +246,7 @@ def Mode2(semesterNum,courseName, url):
     if state == False:
         print "not a good day for selecting courses"
         return
-    print "==============\n模式2，开始选课\n=============="
+    print u"==============\n模式2，开始选课\n=============="
     #获取人文课页面
     geturl1 = 'http://xk.urp.seu.edu.cn/jw_css/xk/runViewsecondSelectClassAction.action?select_jhkcdm=00034&select_mkbh=rwskl&select_xkkclx=45&select_dxdbz=0'
     header1 = {
@@ -279,7 +280,7 @@ def Mode2(semesterNum,courseName, url):
     data = {
             '{}':''
             }
-    print "我开始选课了,课程编号："+courseNo
+    print u"我开始选课了,课程编号："+courseNo
     times = 0
     while True :
         #判断是否选到课
@@ -293,10 +294,10 @@ def Mode2(semesterNum,courseName, url):
         #print result
         success = len(result) #为0为不成功 继续
         if (success != 0)and(result[0].find(courseNo)!=-1):
-            print "Nice，已经选到课程:"+courseNo
+            print u"Nice，已经选到课程:"+courseNo
             break
         #发送选课包
-        print "第"+str(times)+"次尝试选择课程"+courseNo+",但是没选到！"
+        print u"第"+str(times)+"次尝试选择课程"+courseNo+u",但是没选到！"
         (state, text) = postData(posturl,headers,data)
         time.sleep(0.1)#sleep
     return 
@@ -327,7 +328,10 @@ def checkRwState(text):
 def Mode3(semesterNum, url):
     # s =  semester
     (state, text) = selectSemester(semesterNum, url)
-    print "==============\n模式3，开始选课\n=============="
+    if state == False:
+        print "not a good day for selecting courses"
+        return
+    print u"==============\n模式3，开始选课\n=============="
     #获取人文课页面
     geturl1 = 'http://xk.urp.seu.edu.cn/jw_css/xk/runViewsecondSelectClassAction.action?select_jhkcdm=00034&select_mkbh=rwskl&select_xkkclx=45&select_dxdbz=0'
     header1 = {
@@ -338,6 +342,9 @@ def Mode3(semesterNum, url):
                 }   
     data1 = {}
     (state, text) = getData(geturl1,header1,data1)
+    if state == False:
+        print "not a good day for selecting courses"
+        return
     # try:
     #     text = text.encode('utf-8')
     # except Exception, e:
@@ -359,7 +366,7 @@ def Mode3(semesterNum, url):
         if state == 2:
             courseCtList.append(course)
         if state == 0:
-            print "Nice 选到了一门课："+course
+            print u"Nice 选到了一门课："+course
             return   #成功了
     #print courseCtList
     courseTemp = [i for i in courseList if (i not in courseCtList)]
@@ -376,7 +383,7 @@ def Mode3(semesterNum, url):
         print courseAva
         #选课了
         if len(courseAva) == 0:
-            print "第"+str(times)+"次刷新，每门课都选不了.."
+            print u"第"+str(times)+u"次刷新，每门课都选不了.."
         else:
             for course in courseAva:
                 (state, text) = postRw(course)
@@ -385,42 +392,60 @@ def Mode3(semesterNum, url):
                 else:
                     state = -1
                 if 0 == state:
-                    print "Nice 选到了一门课："+course
+                    print u"Nice 选到了一门课："+course
                     return
                 if 1 == state:
-                    print "人品不好 眼皮子底下的课被抢了"
+                    print u"人品不好 眼皮子底下的课被抢了"
         #刷新人文选课界面
         (state, text) = getData(geturl1,header1,data1)
+        
+        if state == False:
+            print 'network error'
+            break
+        
         time.sleep(0.1)
 
     
 
 
 if __name__ == "__main__":
-    print "\n\n\n\n"
-    print "===================================================================== "
+    print u"\n\n\n\n"
+    print u"===================================================================== "
     print u"                    Seu_Jwc_Fker 东南大学选课助手\n"
     print u"     访问 github.com/SnoozeZ/seu_jwc_fker 以了解本工具的最新动态"
-    print "===================================================================== "
+    print u"===================================================================== "
     print u"请选择模式："
     print u"1. 同院竞争臭表脸模式：只值守主界面本院的所有“服从推荐”课程"
     print u"2. 孤注一掷模式：只值守子界面“人文社科类”中你指定一门课程"
     print u"3. 暴力模式：值守子界面“人文社科类”任意一门课程，有剩余就选上"
-    #print "4. 只值守子界面“自然科学与技术科学类”中的指定一门课程（开发中）"
-    #print "5. 输入指定任意门课程的名字并值守（课程类型不限）（开发中）"
-    mode = input('\n请输入模式编号(如:1)：')
-    userId = raw_input('请输入一卡通号(如:213111111)：')
-    passWord = raw_input('请输入密码(如:65535)：')
-    semester = input('请输入学期编号(短学期为1，秋季学期为2，春季学期为3)：')
+    #print u"4. 只值守子界面“自然科学与技术科学类”中的指定一门课程（开发中）"
+    #print u"5. 输入指定任意门课程的名字并值守（课程类型不限）（开发中）"
+    mode = input(u'\n请输入模式编号(如:1)：')
+    userId = raw_input(u'请输入一卡通号(如:213111111)：')
+    passWord = raw_input(u'请输入密码(如:65535)：')
+    semester = input(u'请输入学期编号(短学期为1，秋季学期为2，春季学期为3)：')
+
+    # used for exporting to exe. damn you cmd
+    # mode = input(u'\n请输入模式编号(如:1)：'.encode('gbk'))
+    # userId = raw_input(u'请输入一卡通号(如:213111111)：'.encode('gbk'))
+    # passWord = raw_input(u'请输入密码(如:65535)：'.encode('gbk'))
+    # semester = input(u'请输入学期编号(短学期为1，秋季学期为2，春季学期为3)：'.encode('gbk'))
+
     (state, text, url) = loginIn(userId,passWord)
     if state == True:
         if 1 == mode:
             Mode1(semester, url)
         if 2 == mode:
-            courseName = raw_input('请输入你想值守的人文课名称或者其关键词（如:音乐鉴赏）：')
+            courseName = raw_input(u'请输入你想值守的人文课名称或者其关键词（如:音乐鉴赏）：')
+            # courseName = raw_input(u'请输入你想值守的人文课名称或者其关键词（如:音乐鉴赏）：'.encode('gbk'))  # used for exporting to exe
+            try:
+                courseName.decode('utf-8')
+            except:
+                courseName.decode('gbk').encode('utf-8')  #handle the input from cmd
             Mode2(semester,courseName, url)
         if 3 == mode:
             Mode3(semester, url)
     else:
-        print "plz quit and try again"
-    input('按任意键退出')
+        print u"plz quit and try again"
+    input(u'按任意键退出')    
+    # input(u'按任意键退出'.encode('gbk'))  #used for exporting to exe
