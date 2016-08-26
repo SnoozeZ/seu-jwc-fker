@@ -119,7 +119,7 @@ def postData(posturl,headers,postData):
     for i in range(10):
         try:
             response = urllib2.urlopen(request, timeout = 5)
-            text = response.read().decode('utf-8')
+            text = response.read()
             break
         except Exception, e:
             print 'fail to get response'
@@ -158,7 +158,7 @@ def getData(geturl,header,getData):
     for i in range(10):
         try:
             response = urllib2.urlopen(request, timeout = 5)
-            text = response.read().decode('utf-8')
+            text = response.read()
 #            text = response.read()
             break
         except Exception, e:
@@ -170,7 +170,7 @@ def getData(geturl,header,getData):
     return (True, text)
 
 def stateCheck(textValue):    
-    text = textValue.encode('utf-8')
+    text = textValue
     #if (text.find('成功选择') != -1)or(text.find('服从推荐') != -1):
     if (text.find('成功选择') != -1)or(text.find('服从推荐') != -1):
         return 0
@@ -261,8 +261,8 @@ def Mode2(semesterNum,courseName, url):
         return
     #构造RE  
     #print text
-    text = text.encode('utf-8') 
-    pattern = (courseName + u'.*?(\"8%\" id=\"(.{0,20})\" align)').encode('utf-8')  # possible problem here??
+
+    pattern = (courseName + '.*?(\"8%\" id=\"(.{0,20})\" align)')  # possible problem here??
     #获取课程编号
     courseNo = re.findall(pattern,text,re.S)[0][1]
     #构造数据包
@@ -288,8 +288,7 @@ def Mode2(semesterNum,courseName, url):
         if state == False:
             print "fail to open the course list page. let us have another round"
             continue
-        text = text.encode('utf-8')
-        pattern2 = (u'已选(.{0,200})align=\"').encode('utf-8')
+        pattern2 = ('已选(.{0,200})align=\"')
         result = re.findall(pattern2,text,re.S)
         #print result
         success = len(result) #为0为不成功 继续
@@ -318,7 +317,6 @@ def postRw(courseNo):
     (state, text) = postData(posturl,headers,data)
     return (state, text)
 def checkRwState(text):
-    text = text.encode('utf-8')
     if text.find('true') != -1:  #选课成功
         return 0
     if text.find('名额已满') != -1:
@@ -346,9 +344,8 @@ def Mode3(semesterNum, url):
     #     print e
     #     return text
 
-    text = text.encode('utf-8')
     #获取所有的课程编号
-    pattern = (u'\"8%\" id=\"(.{0,20})\" align').encode('utf-8')
+    pattern = ('\"8%\" id=\"(.{0,20})\" align')
     courseList = re.findall(pattern,text,re.S)
     #print courseList 
     courseCtList =[]
@@ -371,7 +368,7 @@ def Mode3(semesterNum, url):
     while True:
         times = times + 1
         #找出已满的课程
-        pattern = (u'已满.+?(\"8%\" id=\")(.{0,20})\" align').encode('utf-8')
+        pattern = ('已满.+?(\"8%\" id=\")(.{0,20})\" align')
         courseYmList = [i[1] for i in re.findall(pattern,text,re.S)]
         #print courseYmList
         #找出可以选的课程编号
@@ -394,7 +391,6 @@ def Mode3(semesterNum, url):
                     print "人品不好 眼皮子底下的课被抢了"
         #刷新人文选课界面
         (state, text) = getData(geturl1,header1,data1)
-        text = text.encode('utf-8')
         time.sleep(0.1)
 
     
