@@ -371,7 +371,7 @@ def Mode3(semesterNum, url):
     while True:
         times = times + 1
         #找出已满的课程
-        pattern = (u'已满.+?(\"8%\" id=\")(.{0,20})\" align')..encode('utf-8')
+        pattern = (u'已满.+?(\"8%\" id=\")(.{0,20})\" align').encode('utf-8')
         courseYmList = [i[1] for i in re.findall(pattern,text,re.S)]
         #print courseYmList
         #找出可以选的课程编号
