@@ -289,7 +289,7 @@ def Mode2(semesterNum,courseName, url):
             print "fail to open the course list page. let us have another round"
             continue
         text = text.encode('utf-8')
-        pattern2 = (u'已选(.{0,200})align=\"')..encode('utf-8')
+        pattern2 = (u'已选(.{0,200})align=\"').encode('utf-8')
         result = re.findall(pattern2,text,re.S)
         #print result
         success = len(result) #为0为不成功 继续
