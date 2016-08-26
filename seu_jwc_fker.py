@@ -383,7 +383,11 @@ def Mode3(semesterNum, url):
             print "第"+str(times)+"次刷新，每门课都选不了.."
         else:
             for course in courseAva:
-                state = checkRwState(postRw(course))
+                (state, text) = postRw(course)
+                if state == True:
+                    state = checkRwState(text)
+                else:
+                    state = -1
                 if 0 == state:
                     print "Nice 选到了一门课："+course
                     return
