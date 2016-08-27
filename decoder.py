@@ -16,9 +16,9 @@
 #            0. You just DO WHAT THE FUCK YOU WANT TO.
 ########################################################################
 
+import numpy as np
 import cv2
 import Image
-import numpy as np
 import pytesser
 
 def findPoints(img, xPos = 0):
@@ -81,7 +81,7 @@ def imageFileToString(imgPath):
 	except Exception, e:
 		print e
 		return ('', img)
-	return imageFileToString(img)
+	return imageToString(img)
 
 def processImage(img):
 	'''please input a grayscale image(using cv2.imread(<filename>,0))'''
