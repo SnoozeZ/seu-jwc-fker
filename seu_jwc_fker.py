@@ -28,10 +28,11 @@ import string
 import re
 import time
 import sys   
+import decoder
 reload(sys)
 sys.setdefaultencoding( "utf-8" )
 
-def loginIn(userName,passWord):
+def loginIn(userName, passWord, inputCaptcha = True):
     #设置cookie处理器
 	cj = cookielib.LWPCookieJar()
 	cookie_support = urllib2.HTTPCookieProcessor(cj)
@@ -55,10 +56,17 @@ def loginIn(userName,passWord):
 	f = open('code.jpg','wb')
 	f.write(image.read())
 	f.close()
+
+	if inputCaptcha == True:  # manually input the capthcha
 	#读取验证码
-	code = raw_input(u'请打开我所在目录下的code.jpg，并在这里敲入里面的四位数字验证码：')
-    # code = raw_input(u'请打开我所在目录下的code.jpg，并在这里敲入里面的四位数字验证码：'.encode('gbk'))  # used for exporting to exe
-	#构造post数据
+		code = raw_input(u'请打开我所在目录下的code.jpg，并在这里敲入里面的四位数字验证码：')
+		# code = raw_input(u'请打开我所在目录下的code.jpg，并在这里敲入里面的四位数字验证码：'.encode('gbk'))  # used for exporting to exe
+	else:
+        # automatically detect the captcha
+	    (code, img) = decoder.imageFileToString('code.jpg')
+	    print u"the cpatcha has been recognized as " + code
+
+    #构造post数据
 	posturl = 'http://xk.urp.seu.edu.cn/jw_css/system/login.action' 
 	header ={   
 		'Host' : 'xk.urp.seu.edu.cn',   
@@ -74,18 +82,25 @@ def loginIn(userName,passWord):
 		'x' : '33',     #别管
 		'y' : '5'       #别管2
 		}
-            
+    
     #post登录数据
 	(state, text) = postData(posturl,header,data)
 	url = ''
 	if state == True:
-		print u"登录成功"
-		function = re.search(r'onclick="changeXnXq.*\)"', text); # find the function whose parameter are wanted
-		function = function.group()		
-		parameters = re.search(r"'(.*)','(.*)','(.*)'\)", function)
-		url = "http://xk.urp.seu.edu.cn/jw_css/xk/runXnXqmainSelectClassAction.action?Wv3opdZQ89ghgdSSg9FsgG49koguSd2fRVsfweSUj=Q89ghgdSSg9FsgG49koguSd2fRVs&selectXn=" + parameters.group(1) + "&selectXq=" + parameters.group(2) + "&selectTime=" + parameters.group(3)
+		if (text.find('选课批次') != -1):  # a bad label; the url returned should be the best
+			print u"登录成功"
+			function = re.search(r'onclick="changeXnXq.*\)"', text); # find the function whose parameter are wanted
+			function = function.group()		
+			parameters = re.search(r"'(.*)','(.*)','(.*)'\)", function)
+			url = "http://xk.urp.seu.edu.cn/jw_css/xk/runXnXqmainSelectClassAction.action?Wv3opdZQ89ghgdSSg9FsgG49koguSd2fRVsfweSUj=Q89ghgdSSg9FsgG49koguSd2fRVs&selectXn=" + parameters.group(1) + "&selectXq=" + parameters.group(2) + "&selectTime=" + parameters.group(3)
+		else:
+			state = False
+			errorMessage = re.search(r'id="errorReason".*?value="(.*?)"', text)
+			text = errorMessage.group(1)
+			print text.decode('utf-8')
 	else:
-		print "fail to login"
+		text = "network error; failed to login" 
+		print text.decode('utf-8')
 #	print url	
 	return (state, text, url)
 
@@ -427,6 +442,7 @@ if __name__ == "__main__":
     print u"3. 暴力模式：值守子界面“人文社科类”任意一门课程，有剩余就选上"
     #print u"4. 只值守子界面“自然科学与技术科学类”中的指定一门课程（开发中）"
     #print u"5. 输入指定任意门课程的名字并值守（课程类型不限）（开发中）"
+    
     mode = input(u'\n请输入模式编号(如:1)：')
     userId = raw_input(u'请输入一卡通号(如:213111111)：')
     passWord = raw_input(u'请输入密码(如:65535)：')
@@ -438,7 +454,25 @@ if __name__ == "__main__":
     # passWord = raw_input(u'请输入密码(如:65535)：'.encode('gbk'))
     # semester = input(u'请输入学期编号(短学期为1，秋季学期为2，春季学期为3)：'.encode('gbk'))
 
-    (state, text, url) = loginIn(userId,passWord)
+    inputCaptcha = raw_input(u'do you want to mannually input the captcha? [y]/n')
+
+    if inputCaptcha == 'n' or inputCaptcha == 'N':  # should other cases be considered?
+        inputCaptcha = False
+    else:
+        inputCaptcha = True
+
+    (state, text, url) = loginIn(userId,passWord, inputCaptcha)
+    failTimes = 0
+    while state == False:
+        failTimes += 1
+        if failTimes >= 10:
+            print 'failed to recognize for 10 times'
+            break
+        if text.find('验证码错误') == -1:  # maybe wrong password or some thing
+            break
+        (state, text, url) = loginIn(userId, passWord, inputCaptcha)
+
+
     if state == True:
         if 1 == mode:
             Mode1(semester, url)
@@ -453,6 +487,6 @@ if __name__ == "__main__":
         if 3 == mode:
             Mode3(semester, url)
     else:
-        print u"plz quit and try again"
+        print u'maybe you should quit and try again... bye'
     input(u'按任意键退出')    
     # input(u'按任意键退出'.encode('gbk'))  #used for exporting to exe
