@@ -29,6 +29,7 @@ import re
 import time
 import sys   
 reload(sys)
+sys.setdefaultencoding( "utf-8" )
 
 def loginIn(userName,passWord):
     #设置cookie处理器
@@ -320,6 +321,8 @@ def postRw(courseNo):
 def checkRwState(text):
     if text.find('true') != -1:  #选课成功
         return 0
+    # if text.count('已选') == 3:  # this may be useful if multi-instances are created
+    #     return 0
     if text.find('名额已满') != -1:
         return 1
     if text.find('冲突') != -1:
@@ -391,19 +394,22 @@ def Mode3(semesterNum, url):
                     state = checkRwState(text)
                 else:
                     state = -1
-                if 0 == state:
+                if state == 0:
                     print u"Nice 选到了一门课："+course
                     return
-                if 1 == state:
                     print u"人品不好 眼皮子底下的课被抢了"
         #刷新人文选课界面
         (state, text) = getData(geturl1,header1,data1)
-        
+        if text.count('已选') == 3:  # in case of multi-instances
+            print u'already selected a course'
+            break
+
         if state == False:
             print 'network error'
             break
         
         time.sleep(0.1)
+
 
     
 
