@@ -397,6 +397,7 @@ def Mode3(semesterNum, url):
                 if state == 0:
                     print u"Nice 选到了一门课："+course
                     return
+                if state == 1:
                     print u"人品不好 眼皮子底下的课被抢了"
         #刷新人文选课界面
         (state, text) = getData(geturl1,header1,data1)
