@@ -47,7 +47,7 @@ def loginIn(userName, passWord, inputCaptcha = True):
 			image = urllib2.urlopen('http://xk.urp.seu.edu.cn/jw_css/getCheckCode', timeout = 5)
 			break
 		except Exception, e:
-			print 'an error occur while loading the image'
+			print e
 			print 'trying to load agian...'
 			continue
 	else:
@@ -61,8 +61,7 @@ def loginIn(userName, passWord, inputCaptcha = True):
 	#读取验证码
 		code = raw_input(u'请打开我所在目录下的code.jpg，并在这里敲入里面的四位数字验证码：')
 		# code = raw_input(u'请打开我所在目录下的code.jpg，并在这里敲入里面的四位数字验证码：'.encode('gbk'))  # used for exporting to exe
-	else:
-        # automatically detect the captcha
+	else:  # automatically recognise the captcha
 	    (code, img) = decoder.imageFileToString('code.jpg')
 	    print u"the cpatcha has been recognized as " + code
 
@@ -91,17 +90,14 @@ def loginIn(userName, passWord, inputCaptcha = True):
 			print u"登录成功"
 			function = re.search(r'onclick="changeXnXq.*\)"', text); # find the function whose parameter are wanted
 			function = function.group()		
-			parameters = re.search(r"'(.*)','(.*)','(.*)'\)", function)
+			parameters = re.search(r"'(.*)','(.*)','(.*)'\)", function) # url parameters
 			url = "http://xk.urp.seu.edu.cn/jw_css/xk/runXnXqmainSelectClassAction.action?Wv3opdZQ89ghgdSSg9FsgG49koguSd2fRVsfweSUj=Q89ghgdSSg9FsgG49koguSd2fRVs&selectXn=" + parameters.group(1) + "&selectXq=" + parameters.group(2) + "&selectTime=" + parameters.group(3)
 		else:
 			state = False
 			errorMessage = re.search(r'id="errorReason".*?value="(.*?)"', text)
 			text = errorMessage.group(1)
-			print text.decode('utf-8')
 	else:
 		text = "network error; failed to login" 
-		print text.decode('utf-8')
-#	print url	
 	return (state, text, url)
 
 def selectSemester(semesterNum, url):
@@ -111,8 +107,6 @@ def selectSemester(semesterNum, url):
     # !!!NOTICE: SELECTTIME manually set this url is not a wise choice
     # geturl ='http://xk.urp.seu.edu.cn/jw_css/xk/runXnXqmainSelectClassAction.action?Wv3opdZQ89ghgdSSg9FsgG49koguSd2fRVsfweSUj=Q89ghgdSSg9FsgG49koguSd2fRVs&selectXn=2014&selectXq='+str(semesterNum)+'&selectTime=2014-05-30%2013:30~2014-06-07%2023:59'
     
-    # this url is obtained from posting data
-    # !!!need to be tested
     geturl = re.sub('selectXq=.', 'selectXq='+str(semesterNum), url)
     
     header = {  'Host' : 'xk.urp.seu.edu.cn',
@@ -124,9 +118,9 @@ def selectSemester(semesterNum, url):
     #get获取学期课程
     (state, text) = getData(geturl,header,data)
     if state == True:
-        print "successfully switch to semester"+str(semesterNum)
-    else:
-        print "failed to switch to semester"+str(semesterNum)
+        if text.find("数据异常") != -1:  # switch to an unavailable semester
+            state = False
+            text = "semester" + str(semesterNum) + " is not available for now"
     return (state, text)
 
 def postData(posturl,headers,postData):
@@ -168,27 +162,34 @@ def postData(posturl,headers,postData):
 #        return (False, 'fail to post data')
 #    return (True, text, url)
 
-def getData(geturl,header,getData):
+def getData(geturl,header,getData, returnUrl = False):
     getData = urllib.urlencode(getData)
     request = urllib2.Request(geturl, getData, header)
     text = ''
+    url = ''
     for i in range(10):
         try:
             response = urllib2.urlopen(request, timeout = 5)
             text = response.read()
-#            text = response.read()
+            url = response.geturl()
             break
         except Exception, e:
-            print 'fail to get response'
+            print e
             print 'trying to open agian...'
             continue
     else:
-        return (False, 'fail to get data')
-    return (True, text)
+        if returnUrl == False:
+            return (False, 'fail to get data')
+        else:
+            return (False, 'fail to get data', '')
+
+    if returnUrl == False:
+        return (True, text)
+    else:
+        return(True, text, url)
 
 def stateCheck(textValue):    
     text = textValue
-    #if (text.find('成功选择') != -1)or(text.find('服从推荐') != -1):
     if (text.find('成功选择') != -1)or(text.find('服从推荐') != -1):
         return 0
     if text.find('已满') != -1:
@@ -197,11 +198,13 @@ def stateCheck(textValue):
         return 2
 
 def Mode1(semesterNum, url):
-    # s =  semesterNum
     (state, text) = selectSemester(semesterNum, url)
     if state == False:
-        print "not a good day for selecting courses"
+        print text.decode('utf-8')
+        print u'failed to switch to semester' + str(semesterNum)
         return
+    else:
+        print u'successfully switched to semester' + str(semesterNum)
     #寻找可以“服从推荐”的课程
     print u"==============\n模式1，开始选课\n=============="
     courseList = []
@@ -211,7 +214,7 @@ def Mode1(semesterNum, url):
     while m:
         pos = m.end()
         tempText = m.group()
-        course = [tempText[23:31],tempText[34:51],tempText[54:56],1]
+        course = [tempText[23:31],tempText[34:51],tempText[54:56],1]  # any potential danger here? 
         courseList.append(course)
         m=pattern.search(text,pos)  #寻找下一个
     times = 0
@@ -219,8 +222,9 @@ def Mode1(semesterNum, url):
     total = len(courseList)
     while True:
         if total == 0:
+            print u"no course available for now"
             break
-        time.sleep(5)#sleep
+        time.sleep(3)#sleep
         times = times +1
         print u"\n第"+str(times)+u"次选课，已经成功选择"+str(success)+u"门"
         for course in courseList:
@@ -257,11 +261,13 @@ def Mode1(semesterNum, url):
                     print 'fail to select course'+str(course[0])+'due to network error'
        
 def Mode2(semesterNum,courseName, url):
-    # s = semesterNum
     (state, text) = selectSemester(semesterNum, url)
     if state == False:
-        print "not a good day for selecting courses"
+        print text.decode('utf-8')
+        print u'failed to switch to semester' + str(semesterNum)
         return
+    else:
+        print u'successfully switched to semester' + str(semesterNum)
     print u"==============\n模式2，开始选课\n=============="
     #获取人文课页面
     geturl1 = 'http://xk.urp.seu.edu.cn/jw_css/xk/runViewsecondSelectClassAction.action?select_jhkcdm=00034&select_mkbh=rwskl&select_xkkclx=45&select_dxdbz=0'
@@ -274,7 +280,7 @@ def Mode2(semesterNum,courseName, url):
     data1 = {}
     (state, text) = getData(geturl1,header1,data1)
     if state == False:
-        print "something strange happened. maybe you should quit and try again..."
+        print u"fail to open the course list page"
         return
     #构造RE  
     #print text
@@ -303,8 +309,8 @@ def Mode2(semesterNum,courseName, url):
         times = times+1
         (state, text) = getData(geturl1,header1,data1)
         if state == False:
-            print "fail to open the course list page. let us have another round"
-            continue
+            print "fail to open the course list page"
+            return
         pattern2 = ('已选(.{0,200})align=\"')
         result = re.findall(pattern2,text,re.S)
         #print result
@@ -315,7 +321,7 @@ def Mode2(semesterNum,courseName, url):
         #发送选课包
         print u"第"+str(times)+"次尝试选择课程"+courseNo+u",但是没选到！"
         (state, text) = postData(posturl,headers,data)
-        time.sleep(0.1)#sleep
+        time.sleep(3)#sleep
     return 
 def postRw(courseNo):
     posturl = 'http://xk.urp.seu.edu.cn/jw_css/xk/runSelectclassSelectionAction.action?select_jxbbh='+courseNo+'&select_xkkclx=45&select_jhkcdm=00034&select_mkbh=rwskl'
@@ -336,19 +342,19 @@ def postRw(courseNo):
 def checkRwState(text):
     if text.find('true') != -1:  #选课成功
         return 0
-    # if text.count('已选') == 3:  # this may be useful if multi-instances are created
-    #     return 0
     if text.find('名额已满') != -1:
         return 1
     if text.find('冲突') != -1:
         return 2
     return -1
 def Mode3(semesterNum, url):
-    # s =  semester
     (state, text) = selectSemester(semesterNum, url)
     if state == False:
-        print "not a good day for selecting courses"
+        print text.decode('utf-8')
+        print u'failed to switch to semester' + str(semesterNum)
         return
+    else:
+        print u'successfully switched to semester' + str(semesterNum)
     print u"==============\n模式3，开始选课\n=============="
     #获取人文课页面
     geturl1 = 'http://xk.urp.seu.edu.cn/jw_css/xk/runViewsecondSelectClassAction.action?select_jhkcdm=00034&select_mkbh=rwskl&select_xkkclx=45&select_dxdbz=0'
@@ -361,13 +367,8 @@ def Mode3(semesterNum, url):
     data1 = {}
     (state, text) = getData(geturl1,header1,data1)
     if state == False:
-        print "not a good day for selecting courses"
+        print u"fail to open the course list page"
         return
-    # try:
-    #     text = text.encode('utf-8')
-    # except Exception, e:
-    #     print e
-    #     return text
 
     #获取所有的课程编号
     pattern = ('\"8%\" id=\"(.{0,20})\" align')
@@ -421,13 +422,10 @@ def Mode3(semesterNum, url):
             break
 
         if state == False:
-            print 'network error'
-            break
+            print u"fail to open the course list page"
+            return
         
-        time.sleep(0.1)
-
-
-    
+        time.sleep(3)
 
 
 if __name__ == "__main__":
@@ -454,7 +452,7 @@ if __name__ == "__main__":
     # passWord = raw_input(u'请输入密码(如:65535)：'.encode('gbk'))
     # semester = input(u'请输入学期编号(短学期为1，秋季学期为2，春季学期为3)：'.encode('gbk'))
 
-    inputCaptcha = raw_input(u'do you want to mannually input the captcha? [y]/n')
+    inputCaptcha = raw_input(u'do you want to mannually input the captcha? [y]/n: ')
 
     if inputCaptcha == 'n' or inputCaptcha == 'N':  # should other cases be considered?
         inputCaptcha = False
@@ -463,15 +461,20 @@ if __name__ == "__main__":
 
     (state, text, url) = loginIn(userId,passWord, inputCaptcha)
     failTimes = 0
-    while state == False:
-        failTimes += 1
-        if failTimes >= 10:
-            print 'failed to recognize for 10 times'
-            break
-        if text.find('验证码错误') == -1:  # maybe wrong password or some thing
-            break
-        (state, text, url) = loginIn(userId, passWord, inputCaptcha)
-
+    if inputCaptcha == True:
+        print text.decode('utf-8')
+    else:
+        while state == False:
+            print text.decode('utf-8')
+            failTimes += 1
+            if failTimes >= 10:
+                print u'failed to recognize the captcha for 10 times'
+                break
+            if text.find('尚未开放') != -1:  # would this make it more unfair to others?
+                pass
+            if text.find('验证码错误') == -1:  # maybe wrong password or some thing
+                break
+            (state, text, url) = loginIn(userId, passWord, inputCaptcha)
 
     if state == True:
         if 1 == mode:
