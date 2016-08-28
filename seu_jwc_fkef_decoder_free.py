@@ -27,8 +27,7 @@ import cookielib
 import string  
 import re
 import time
-import sys   
-import decoder
+import sys
 reload(sys)
 sys.setdefaultencoding( "utf-8" )
 
@@ -61,9 +60,7 @@ def loginIn(userName, passWord, inputCaptcha = True):
 	#读取验证码
 		code = raw_input(u'请打开我所在目录下的code.jpg，并在这里敲入里面的四位数字验证码：')
 		# code = raw_input(u'请打开我所在目录下的code.jpg，并在这里敲入里面的四位数字验证码：'.encode('gbk'))  # used for exporting to exe
-	else:  # automatically recognise the captcha
-	    (code, img) = decoder.imageFileToString('code.jpg')
-	    print u"the cpatcha has been recognized as " + code
+
 
     #构造post数据
 	posturl = 'http://xk.urp.seu.edu.cn/jw_css/system/login.action' 
@@ -452,29 +449,11 @@ if __name__ == "__main__":
     # passWord = raw_input(u'请输入密码(如:65535)：'.encode('gbk'))
     # semester = input(u'请输入学期编号(短学期为1，秋季学期为2，春季学期为3)：'.encode('gbk'))
 
-    inputCaptcha = raw_input(u'do you want to mannually input the captcha? [y]/n: ')
-
-    if inputCaptcha == 'n' or inputCaptcha == 'N':  # should other cases be considered?
-        inputCaptcha = False
-    else:
-        inputCaptcha = True
-
+    inputCaptcha = True
     (state, text, url) = loginIn(userId,passWord, inputCaptcha)
     failTimes = 0
     if inputCaptcha == True and state == False:
         print text.decode('utf-8')
-    else:
-        while state == False:
-            print text.decode('utf-8')
-            failTimes += 1
-            if failTimes >= 10:
-                print u'failed to recognize the captcha for 10 times'
-                break
-            if text.find('尚未开放') != -1:  # would this make it more unfair to others?
-                pass
-            if text.find('验证码错误') == -1:  # maybe wrong password or something
-                break
-            (state, text, url) = loginIn(userId, passWord, inputCaptcha)
 
     if state == True:
         if 1 == mode:
