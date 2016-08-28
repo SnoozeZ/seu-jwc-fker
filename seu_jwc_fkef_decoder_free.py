@@ -47,10 +47,9 @@ def loginIn(userName, passWord, inputCaptcha = True):
 			break
 		except Exception, e:
 			print e
-			print 'trying to load agian...'
 			continue
 	else:
-		return (False, 'fail to get capthca')
+		return (False, "验证码获取失败")
 
 	f = open('code.jpg','wb')
 	f.write(image.read())
@@ -94,7 +93,7 @@ def loginIn(userName, passWord, inputCaptcha = True):
 			errorMessage = re.search(r'id="errorReason".*?value="(.*?)"', text)
 			text = errorMessage.group(1)
 	else:
-		text = "network error; failed to login" 
+		text = "网络错误，登录失败" 
 	return (state, text, url)
 
 def selectSemester(semesterNum, url):
@@ -117,7 +116,7 @@ def selectSemester(semesterNum, url):
     if state == True:
         if text.find("数据异常") != -1:  # switch to an unavailable semester
             state = False
-            text = "semester" + str(semesterNum) + " is not available for now"
+            text = "目前无法选择学期" + str(semesterNum)
     return (state, text)
 
 def postData(posturl,headers,postData):
@@ -134,7 +133,7 @@ def postData(posturl,headers,postData):
             print 'trying to open agian...'
             continue
     else:
-        return (False, 'fail to post data')
+        return (False, "数据发送失败")
     return (True, text)
 
 
@@ -176,9 +175,9 @@ def getData(geturl,header,getData, returnUrl = False):
             continue
     else:
         if returnUrl == False:
-            return (False, 'fail to get data')
+            return (False, "获取数据失败")
         else:
-            return (False, 'fail to get data', '')
+            return (False, "获取数据失败", '')
 
     if returnUrl == False:
         return (True, text)
@@ -198,10 +197,10 @@ def Mode1(semesterNum, url):
     (state, text) = selectSemester(semesterNum, url)
     if state == False:
         print text.decode('utf-8')
-        print u'failed to switch to semester' + str(semesterNum)
+        print u'切换到学期' + str(semesterNum) + u"失败"
         return
     else:
-        print u'successfully switched to semester' + str(semesterNum)
+        print u'切换到学期' + str(semesterNum) + u"成功"
     #寻找可以“服从推荐”的课程
     print u"==============\n模式1，开始选课\n=============="
     courseList = []
@@ -219,7 +218,7 @@ def Mode1(semesterNum, url):
     total = len(courseList)
     while True:
         if total == 0:
-            print u"no course available for now"
+            print u"目前没有课可以选择"
             break
         time.sleep(3)#sleep
         times = times +1
@@ -255,16 +254,16 @@ def Mode1(semesterNum, url):
                 elif flag == 2:
                     print u"课程"+str(course[0])+u" 选课失败，原因未知"
                 elif flag == 3:
-                    print 'fail to select course'+str(course[0])+'due to network error'
+                    print u"课程"+str(course[0])+u" 选课失败，网络错误"
        
 def Mode2(semesterNum,courseName, url):
     (state, text) = selectSemester(semesterNum, url)
     if state == False:
         print text.decode('utf-8')
-        print u'failed to switch to semester' + str(semesterNum)
+        print u'切换到学期' + str(semesterNum) + u"失败"
         return
     else:
-        print u'successfully switched to semester' + str(semesterNum)
+        print u'切换到学期' + str(semesterNum) + u"成功"
     print u"==============\n模式2，开始选课\n=============="
     #获取人文课页面
     geturl1 = 'http://xk.urp.seu.edu.cn/jw_css/xk/runViewsecondSelectClassAction.action?select_jhkcdm=00034&select_mkbh=rwskl&select_xkkclx=45&select_dxdbz=0'
@@ -277,7 +276,7 @@ def Mode2(semesterNum,courseName, url):
     data1 = {}
     (state, text) = getData(geturl1,header1,data1)
     if state == False:
-        print u"fail to open the course list page"
+        print u"打开课程列表页面失败"
         return
     #构造RE  
     #print text
@@ -306,7 +305,7 @@ def Mode2(semesterNum,courseName, url):
         times = times+1
         (state, text) = getData(geturl1,header1,data1)
         if state == False:
-            print "fail to open the course list page"
+            print "打开课程列表页面失败"
             return
         pattern2 = ('已选(.{0,200})align=\"')
         result = re.findall(pattern2,text,re.S)
@@ -348,10 +347,10 @@ def Mode3(semesterNum, url):
     (state, text) = selectSemester(semesterNum, url)
     if state == False:
         print text.decode('utf-8')
-        print u'failed to switch to semester' + str(semesterNum)
+        print u'切换到学期' + str(semesterNum) + u"失败"
         return
     else:
-        print u'successfully switched to semester' + str(semesterNum)
+        print u'切换到学期' + str(semesterNum) + u"成功"
     print u"==============\n模式3，开始选课\n=============="
     #获取人文课页面
     geturl1 = 'http://xk.urp.seu.edu.cn/jw_css/xk/runViewsecondSelectClassAction.action?select_jhkcdm=00034&select_mkbh=rwskl&select_xkkclx=45&select_dxdbz=0'
@@ -364,7 +363,7 @@ def Mode3(semesterNum, url):
     data1 = {}
     (state, text) = getData(geturl1,header1,data1)
     if state == False:
-        print u"fail to open the course list page"
+        print u"打开课程列表页面失败"
         return
 
     #获取所有的课程编号
@@ -415,11 +414,11 @@ def Mode3(semesterNum, url):
         #刷新人文选课界面
         (state, text) = getData(geturl1,header1,data1)
         if text.count('已选') == 3:  # in case of multi-instances
-            print u'already selected a course'
+            print u"已经选到一门课了"
             break
 
         if state == False:
-            print u"fail to open the course list page"
+            print u"打开课程列表页面失败"
             return
         
         time.sleep(3)
@@ -469,6 +468,6 @@ if __name__ == "__main__":
         if 3 == mode:
             Mode3(semester, url)
     else:
-        print u'maybe you should quit and try again... bye'
+        print u"要不试试退出后重新打开一下本程序？"
     input(u'按任意键退出')    
     # input(u'按任意键退出'.encode('gbk'))  #used for exporting to exe
