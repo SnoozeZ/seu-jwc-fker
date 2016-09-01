@@ -213,7 +213,8 @@ def Mode1(semesterNum, url):
     while m:
         pos = m.end()
         tempText = m.group()
-        course = [tempText[23:31],tempText[34:51],tempText[54:56],1]  # any potential danger here? 
+        parameters = re.search(r"selectThis\('(.*?)','(.*?)','(.*?)'", tempText)
+        course = [parameters.group(1),parameters.group(2),parameters.group(3),1]
         courseList.append(course)
         m=pattern.search(text,pos)  #寻找下一个
     times = 0
@@ -243,21 +244,19 @@ def Mode1(semesterNum, url):
                 #post选课包，并获取返回状态
                 (state, text) = postData(posturl,headers,data)
                 if state == False:
-                    flag = 3
+                    text = '网络错误'
                 else:
-                    flag = stateCheck(text)
-                #根据选课状态返回信息
-                if flag == 0:
+                    # flag = stateCheck(text)
+                    if text.find('isSuccess":"false') != -1:
+                        state = False
+                        text = re.search(r'errorStr":"(.*?)"', text).group(1)
+                if state == True:
                     course[3] = 0
-                    success = success + 1
-                    total = total - 1
+                    success += 1
+                    total -= 1
                     print u"Nice, 课程"+str(course[0])+u" 选择成功"
-                elif flag == 1:
-                    print u"课程"+str(course[0])+u" 名额已满"
-                elif flag == 2:
-                    print u"课程"+str(course[0])+u" 选课失败，原因未知"
-                elif flag == 3:
-                    print u"课程"+str(course[0])+u" 选课失败，网络错误"
+                else:
+                    print u"课程"+str(course[0])+u" 选课失败，" + text.decode('utf-8')
        
 def Mode2(semesterNum,courseName, url):
     (state, text) = selectSemester(semesterNum, url)
