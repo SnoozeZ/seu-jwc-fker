@@ -39,12 +39,12 @@ def loginIn(userName, passWord, inputCaptcha = True):
 	opener = urllib2.build_opener(cookie_support, urllib2.HTTPHandler)  
 	urllib2.install_opener(opener)  
     #打开选课页面
-	h = urllib2.urlopen('http://xk.urp.seu.edu.cn/jw_css/system/showLogin.action', timeout = 5)   # is this really necessary?
+	h = urllib2.urlopen('http://xk.urp.seu.edu.cn/jw_css/system/showLogin.action', timeout = 10)   # is this really necessary?
     #获取验证码
     
 	for i in range(10):
 		try:
-			image = urllib2.urlopen('http://xk.urp.seu.edu.cn/jw_css/getCheckCode', timeout = 5)
+			image = urllib2.urlopen('http://xk.urp.seu.edu.cn/jw_css/getCheckCode', timeout = 10)
 			break
 		except Exception, e:
 			print e
@@ -223,7 +223,7 @@ def Mode1(semesterNum, url):
         if total == 0:
             print u"目前没有课可以选择"
             break
-        time.sleep(3)#sleep
+        time.sleep(0.1)#sleep
         times = times +1
         print u"\n第"+str(times)+u"次选课，已经成功选择"+str(success)+u"门"
         for course in courseList:
@@ -320,7 +320,7 @@ def Mode2(semesterNum,courseName, url):
         #发送选课包
         print u"第"+str(times)+"次尝试选择课程"+courseNo+u",但是没选到！"
         (state, text) = postData(posturl,headers,data)
-        time.sleep(3)#sleep
+        time.sleep(0.1)#sleep
     return 
 def postRw(courseNo):
     posturl = 'http://xk.urp.seu.edu.cn/jw_css/xk/runSelectclassSelectionAction.action?select_jxbbh='+courseNo+'&select_xkkclx=45&select_jhkcdm=00034&select_mkbh=rwskl'
@@ -424,7 +424,7 @@ def Mode3(semesterNum, url):
             print u"打开课程列表页面失败"
             return
         
-        time.sleep(3)
+        time.sleep(0.1)
 
 
 if __name__ == "__main__":
@@ -470,8 +470,10 @@ if __name__ == "__main__":
                 print u'验证码识别失败达到10次'
                 break
             if text.find('尚未开放') != -1:  # would this make it more unfair to others?
-                pass
-            if text.find('验证码错误') == -1:  # maybe wrong password or something
+                # temporarily enable this
+                failTimes = 0
+                # pass
+            elif text.find('验证码错误') == -1:  # maybe wrong password or something
                 break
             (state, text, url) = loginIn(userId, passWord, inputCaptcha)
 
