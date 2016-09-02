@@ -1,4 +1,4 @@
-# -*- coding: gbk -*-
+# -*- coding: utf-8 -*-
 #!/usr/bin/python  
 #import urllib.request
 
@@ -28,90 +28,162 @@ import string
 import re
 import time
 import sys   
-reload(sys)  
+import decoder
+reload(sys)
+sys.setdefaultencoding( "utf-8" )
 
+def loginIn(userName, passWord, inputCaptcha = True):
+    #è®¾ç½®cookieå¤„ç†å™¨
+	cj = cookielib.LWPCookieJar()
+	cookie_support = urllib2.HTTPCookieProcessor(cj)
+	opener = urllib2.build_opener(cookie_support, urllib2.HTTPHandler)  
+	urllib2.install_opener(opener)  
+    #æ‰“å¼€é€‰è¯¾é¡µé¢
+#	h = urllib2.urlopen('http://xk.urp.seu.edu.cn/jw_css/system/showLogin.action', timeout = 10)   # seems it is not necessary
+    #è·å–éªŒè¯ç 
+    
+	for i in range(10):
+		try:
+			image = urllib2.urlopen('http://xk.urp.seu.edu.cn/jw_css/getCheckCode', timeout = 10)
+			break
+		except Exception, e:
+			print e
+			continue
+	else:
+		return (False, "éªŒè¯ç è·å–å¤±è´¥", '')
 
-def loginIn(userName,passWord):
-    #ÉèÖÃcookie´¦ÀíÆ÷
-    cj = cookielib.LWPCookieJar()
-    cookie_support = urllib2.HTTPCookieProcessor(cj)
-    opener = urllib2.build_opener(cookie_support, urllib2.HTTPHandler)  
-    urllib2.install_opener(opener)  
-    #´ò¿ªÑ¡¿ÎÒ³Ãæ
-    h = urllib2.urlopen('http://xk.urp.seu.edu.cn/') 
-    #»ñÈ¡ÑéÖ¤Âë
-    image = urllib2.urlopen('http://xk.urp.seu.edu.cn/jw_css/getCheckCode')
-    f = open('code.jpg','wb')
-    f.write(image.read())
-    f.close()
-    #¶ÁÈ¡ÑéÖ¤Âë
-    code = raw_input('Çë´ò¿ªÎÒËùÔÚÄ¿Â¼ÏÂµÄcode.jpg£¬²¢ÔÚÕâÀïÇÃÈëÀïÃæµÄËÄÎ»Êı×ÖÑéÖ¤Âë£º')
-    #¹¹ÔìpostÊı¾İ
-    posturl = 'http://xk.urp.seu.edu.cn/jw_css/system/login.action' 
-    header ={   
-                'Host' : 'xk.urp.seu.edu.cn',   
-                'Proxy-Connection' : 'keep-alive',
-                'Origin' : 'http://xk.urp.seu.edu.cn',
-                'User-Agent' : 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:14.0) Gecko/20100101 Firefox/14.0.1',
-                'Referer' : 'http://xk.urp.seu.edu.cn/jw_css/system/login.action'
-                }
-    data = {
-            'userId' : userName,
-            'userPassword' : passWord, #ÄãµÄÃÜÂë£¬  
-            'checkCode' : code,           #ÑéÖ¤Âë 
-            'x' : '33',     #±ğ¹Ü
-            'y' : '5'       #±ğ¹Ü2
-            }
-            
-    #postµÇÂ¼Êı¾İ
-    text = postData(posturl,header,data)
-    print "µÇÂ¼³É¹¦"
-    return text
+	f = open('code.jpg','wb')
+	f.write(image.read())
+	f.close()
 
-def selectSemester(semesterNum):
-    print "ÇĞ»»Ñ§ÆÚ²Ëµ¥ÖĞ......"
+	if inputCaptcha == True:  # manually input the capthcha
+	#è¯»å–éªŒè¯ç 
+		code = raw_input(u'è¯·æ‰“å¼€æˆ‘æ‰€åœ¨ç›®å½•ä¸‹çš„code.jpgï¼Œå¹¶åœ¨è¿™é‡Œæ•²å…¥é‡Œé¢çš„å››ä½æ•°å­—éªŒè¯ç ï¼š')
+		# code = raw_input(u'è¯·æ‰“å¼€æˆ‘æ‰€åœ¨ç›®å½•ä¸‹çš„code.jpgï¼Œå¹¶åœ¨è¿™é‡Œæ•²å…¥é‡Œé¢çš„å››ä½æ•°å­—éªŒè¯ç ï¼š'.encode('gbk'))  # used for exporting to exe
+	else:  # automatically recognise the captcha
+	    (code, img) = decoder.imageFileToString('code.jpg')
+	    print u"éªŒè¯ç è¯†åˆ«ä¸ºï¼š " + code
+
+    #æ„é€ postæ•°æ®
+	posturl = 'http://xk.urp.seu.edu.cn/jw_css/system/login.action' 
+	header ={   
+		'Host' : 'xk.urp.seu.edu.cn',   
+		'Proxy-Connection' : 'keep-alive',
+		'Origin' : 'http://xk.urp.seu.edu.cn',
+		'User-Agent' : 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:14.0) Gecko/20100101 Firefox/14.0.1',
+		'Referer' : 'http://xk.urp.seu.edu.cn/jw_css/system/login.action'
+		}
+	data = {
+		'userId' : userName,
+		'userPassword' : passWord, #ä½ çš„å¯†ç ï¼Œ  
+		'checkCode' : code,           #éªŒè¯ç  
+		'x' : '33',     #åˆ«ç®¡
+		'y' : '5'       #åˆ«ç®¡2
+		}
+    
+    #postç™»å½•æ•°æ®
+	(state, text) = postData(posturl,header,data)
+	url = ''
+	if state == True:
+		if (text.find('é€‰è¯¾æ‰¹æ¬¡') != -1):  # a bad label; the url returned should be the best
+			print u"ç™»å½•æˆåŠŸ"
+			function = re.search(r'onclick="changeXnXq.*\)"', text); # find the function whose parameter are desired
+			function = function.group()		
+			parameters = re.search(r"'(.*)','(.*)','(.*)'\)", function) # fetch url parameters
+			url = "http://xk.urp.seu.edu.cn/jw_css/xk/runXnXqmainSelectClassAction.action?Wv3opdZQ89ghgdSSg9FsgG49koguSd2fRVsfweSUj=Q89ghgdSSg9FsgG49koguSd2fRVs&selectXn=" + parameters.group(1) + "&selectXq=" + parameters.group(2) + "&selectTime=" + parameters.group(3)
+		else:
+			state = False
+			errorMessage = re.search(r'id="errorReason".*?value="(.*?)"', text)
+			text = errorMessage.group(1)
+	else:
+		text = "ç½‘ç»œé”™è¯¯ï¼Œç™»å½•å¤±è´¥" 
+	return (state, text, url)
+
+def selectSemester(semesterNum, url):
+    print u"åˆ‡æ¢å­¦æœŸèœå•ä¸­......"
     time.sleep(5)
-    #¹¹ÔìÑ¡ÔñÑ§ÆÚµÄ°ü
-    geturl ='http://xk.urp.seu.edu.cn/jw_css/xk/runXnXqmainSelectClassAction.action?Wv3opdZQ89ghgdSSg9FsgG49koguSd2fRVsfweSUj=Q89ghgdSSg9FsgG49koguSd2fRVs&selectXn=2014&selectXq='+str(semesterNum)+'&selectTime=2014-05-30%2013:30~2014-06-07%2023:59'
+    #æ„é€ é€‰æ‹©å­¦æœŸçš„åŒ…
+    # !!!NOTICE: SELECTTIME manually set this url is not a wise choice
+    # geturl ='http://xk.urp.seu.edu.cn/jw_css/xk/runXnXqmainSelectClassAction.action?Wv3opdZQ89ghgdSSg9FsgG49koguSd2fRVsfweSUj=Q89ghgdSSg9FsgG49koguSd2fRVs&selectXn=2014&selectXq='+str(semesterNum)+'&selectTime=2014-05-30%2013:30~2014-06-07%2023:59'
+    
+    geturl = re.sub('selectXq=.', 'selectXq='+str(semesterNum), url)
+    
     header = {  'Host' : 'xk.urp.seu.edu.cn',
                 'Proxy-Connection' : 'keep-alive',
                 'Accept' : 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
                 'User-Agent' : 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:14.0) Gecko/20100101 Firefox/14.0.1',        
     }
     data = {}
-    #get»ñÈ¡Ñ§ÆÚ¿Î³Ì
-    text = getData(geturl,header,data)
-    return text
+    #getè·å–å­¦æœŸè¯¾ç¨‹
+    (state, text) = getData(geturl,header,data)
+    if state == True:
+        if text.find("æ•°æ®å¼‚å¸¸") != -1:  # switched to an unavailable semester
+            state = False
+            text = "ç›®å‰æ— æ³•é€‰æ‹©å­¦æœŸ" + str(semesterNum)
+    return (state, text)
 
 def postData(posturl,headers,postData):
-    postData = urllib.urlencode(postData)  #PostÊı¾İ±àÂë   
-    request = urllib2.Request(posturl, postData, headers)#Í¨¹ıurllib2Ìá¹©µÄrequest·½·¨À´ÏòÖ¸¶¨Url·¢ËÍÎÒÃÇ¹¹ÔìµÄÊı¾İ£¬²¢Íê³ÉµÇÂ¼¹ı³Ì 
-    response = urllib2.urlopen(request)  
-    text = response.read().decode('utf-8')
-    return text
+    postData = urllib.urlencode(postData)  #Postæ•°æ®ç¼–ç    
+    request = urllib2.Request(posturl, postData, headers)#é€šè¿‡urllib2æä¾›çš„requestæ–¹æ³•æ¥å‘æŒ‡å®šUrlå‘é€æˆ‘ä»¬æ„é€ çš„æ•°æ®ï¼Œå¹¶å®Œæˆç™»å½•è¿‡ç¨‹ 
+    text = ''
+    for i in range(10):
+        try:
+            response = urllib2.urlopen(request, timeout = 5)
+            text = response.read()
+            break
+        except Exception, e:
+            print 'fail to get response'
+            print 'trying to open agian...'
+            continue
+    else:
+        return (False, "æ•°æ®å‘é€å¤±è´¥")
+    return (True, text)
 
-def getData(geturl,header,getData):
+def getData(geturl,header,getData, returnUrl = False):
     getData = urllib.urlencode(getData)
     request = urllib2.Request(geturl, getData, header)
-    response = urllib2.urlopen(request)
-    text = response.read().decode('utf-8') 
-    return text
+    text = ''
+    url = ''
+    for i in range(10):
+        try:
+            response = urllib2.urlopen(request, timeout = 5)
+            text = response.read()
+            url = response.geturl()
+            break
+        except Exception, e:
+            print e
+            print 'trying to open agian...'
+            continue
+    else:
+        if returnUrl == False:
+            return (False, "è·å–æ•°æ®å¤±è´¥")
+        else:
+            return (False, "è·å–æ•°æ®å¤±è´¥", '')
+
+    if returnUrl == False:
+        return (True, text)
+    else:
+        return(True, text, url)
 
 def stateCheck(textValue):    
-    text = textValue.encode('gbk')
-    #if (text.find('³É¹¦Ñ¡Ôñ') != -1)or(text.find('·ş´ÓÍÆ¼ö') != -1):
-    if (text.find('³É¹¦Ñ¡Ôñ') != -1)or(text.find('·ş´ÓÍÆ¼ö') != -1):
+    text = textValue
+    if (text.find('æˆåŠŸé€‰æ‹©') != -1)or(text.find('æœä»æ¨è') != -1):
         return 0
-    if text.find('ÒÑÂú') != -1:
+    if text.find('å·²æ»¡') != -1:
         return 1
-    if text.find('Ê§°Ü') != -1:
+    if text.find('å¤±è´¥') != -1:
         return 2
 
-def Mode1(semesterNum):
-    s =  semesterNum
-    text = selectSemester(s)
-    #Ñ°ÕÒ¿ÉÒÔ¡°·ş´ÓÍÆ¼ö¡±µÄ¿Î³Ì
-    print "==============\nÄ£Ê½1£¬¿ªÊ¼Ñ¡¿Î\n=============="
+def Mode1(semesterNum, url):
+    (state, text) = selectSemester(semesterNum, url)
+    if state == False:
+        print text.decode('utf-8')
+        print u'åˆ‡æ¢åˆ°å­¦æœŸ' + str(semesterNum) + u"å¤±è´¥"
+        return
+    else:
+        print u'åˆ‡æ¢åˆ°å­¦æœŸ' + str(semesterNum) + u"æˆåŠŸ"
+    #å¯»æ‰¾å¯ä»¥â€œæœä»æ¨èâ€çš„è¯¾ç¨‹
+    print u"==============\næ¨¡å¼1ï¼Œå¼€å§‹é€‰è¯¾\n=============="
     courseList = []
     pattern = re.compile(r'\" onclick=\"selectThis\(\'.*\'')
     pos = 0
@@ -119,21 +191,23 @@ def Mode1(semesterNum):
     while m:
         pos = m.end()
         tempText = m.group()
-        course = [tempText[23:31],tempText[34:51],tempText[54:56],1]
+        parameters = re.search(r"selectThis\('(.*?)','(.*?)','(.*?)'", tempText)
+        course = [parameters.group(1),parameters.group(2),parameters.group(3),1]
         courseList.append(course)
-        m=pattern.search(text,pos)  #Ñ°ÕÒÏÂÒ»¸ö
+        m=pattern.search(text,pos)  #å¯»æ‰¾ä¸‹ä¸€ä¸ª
     times = 0
     success = 0
     total = len(courseList)
     while True:
         if total == 0:
+            print u"ç›®å‰æ²¡æœ‰è¯¾å¯ä»¥é€‰æ‹©"
             break
-        time.sleep(5)#sleep
+        time.sleep(3)#sleep
         times = times +1
-        print "\nµÚ"+str(times)+"´ÎÑ¡¿Î£¬ÒÑ¾­³É¹¦Ñ¡Ôñ"+str(success)+"ÃÅ"
+        print u"\nç¬¬"+str(times)+u"æ¬¡é€‰è¯¾ï¼Œå·²ç»æˆåŠŸé€‰æ‹©"+str(success)+u"é—¨"
         for course in courseList:
-            if 1 == course[3]:
-            #¹¹ÔìÑ¡¿Îpost
+            if course[3] == 1:
+            #æ„é€ é€‰è¯¾post
                 posturl = 'http://xk.urp.seu.edu.cn/jw_css/xk/runSelectclassSelectionAction.action?select_jxbbh='+course[1]+'&select_xkkclx='+course[2]+'&select_jhkcdm='+course[0]
                 headers = { 'Host' : 'xk.urp.seu.edu.cn',
                         'Proxy-Connection' : 'keep-alive',
@@ -145,24 +219,32 @@ def Mode1(semesterNum):
                         }
                 data = {'{}':''
                 }
-                #postÑ¡¿Î°ü£¬²¢»ñÈ¡·µ»Ø×´Ì¬
-                flag = stateCheck(postData(posturl,headers,data))
-                #¸ù¾İÑ¡¿Î×´Ì¬·µ»ØĞÅÏ¢
-                if 0 == flag:
+                #posté€‰è¯¾åŒ…ï¼Œå¹¶è·å–è¿”å›çŠ¶æ€
+                (state, text) = postData(posturl,headers,data)
+                if state == False:
+                    text = 'ç½‘ç»œé”™è¯¯'
+                else:
+                    if text.find('isSuccess":"false') != -1:
+                        state = False
+                        text = re.search(r'errorStr":"(.*?)"', text).group(1)
+                if state == True:
                     course[3] = 0
-                    success = success + 1
-                    total = total - 1
-                    print 'Nice, ¿Î³Ì'+str(course[0])+" Ñ¡Ôñ³É¹¦"
-                if 1 == flag:
-                    print '¿Î³Ì'+str(course[0])+" Ãû¶îÒÑÂú"
-                if 2 == flag:
-                    print '¿Î³Ì'+str(course[0])+" Ñ¡¿ÎÊ§°Ü£¬Ô­ÒòÎ´Öª"
+                    success += 1
+                    total -= 1
+                    print u"Nice, è¯¾ç¨‹"+str(course[0])+u" é€‰æ‹©æˆåŠŸ"
+                else:
+                    print u"è¯¾ç¨‹"+str(course[0])+u" é€‰è¯¾å¤±è´¥ï¼Œ" + text.decode('utf-8')
        
-def Mode2(semesterNum,courseName):
-    s =  semesterNum
-    text = selectSemester(s)
-    print "==============\nÄ£Ê½2£¬¿ªÊ¼Ñ¡¿Î\n=============="
-    #»ñÈ¡ÈËÎÄ¿ÎÒ³Ãæ
+def Mode2(semesterNum,courseName, url):
+    (state, text) = selectSemester(semesterNum, url)
+    if state == False:
+        print text.decode('utf-8')
+        print u'åˆ‡æ¢åˆ°å­¦æœŸ' + str(semesterNum) + u"å¤±è´¥"
+        return
+    else:
+        print u'åˆ‡æ¢åˆ°å­¦æœŸ' + str(semesterNum) + u"æˆåŠŸ"
+    print u"==============\næ¨¡å¼2ï¼Œå¼€å§‹é€‰è¯¾\n=============="
+    #è·å–äººæ–‡è¯¾é¡µé¢
     geturl1 = 'http://xk.urp.seu.edu.cn/jw_css/xk/runViewsecondSelectClassAction.action?select_jhkcdm=00034&select_mkbh=rwskl&select_xkkclx=45&select_dxdbz=0'
     header1 = {
                 'Host' : 'xk.urp.seu.edu.cn',
@@ -171,14 +253,17 @@ def Mode2(semesterNum,courseName):
                 'User-Agent' : 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:14.0) Gecko/20100101 Firefox/14.0.1',
                 }   
     data1 = {}
-    text = getData(geturl1,header1,data1)
-    #¹¹ÔìRE  
+    (state, text) = getData(geturl1,header1,data1)
+    if state == False:
+        print u"æ‰“å¼€è¯¾ç¨‹åˆ—è¡¨é¡µé¢å¤±è´¥"
+        return
+    #æ„é€ RE  
     #print text
-    text = text.encode('utf-8') 
-    pattern = (courseName+'.*?(\"8%\" id=\"(.{0,20})\" align)').decode('gbk').encode('utf-8')
-    #»ñÈ¡¿Î³Ì±àºÅ
+
+    pattern = (courseName + '.*?(\"8%\" id=\"(.{0,20})\" align)')  # possible problem here??
+    #è·å–è¯¾ç¨‹ç¼–å·
     courseNo = re.findall(pattern,text,re.S)[0][1]
-    #¹¹ÔìÊı¾İ°ü
+    #æ„é€ æ•°æ®åŒ…
     posturl = 'http://xk.urp.seu.edu.cn/jw_css/xk/runSelectclassSelectionAction.action?select_jxbbh='+courseNo+'&select_xkkclx=45&select_jhkcdm=00034&select_mkbh=rwskl'
     headers = { 
                 'Host' : 'xk.urp.seu.edu.cn',
@@ -192,24 +277,26 @@ def Mode2(semesterNum,courseName):
     data = {
             '{}':''
             }
-    print "ÎÒ¿ªÊ¼Ñ¡¿ÎÁË,¿Î³Ì±àºÅ£º"+courseNo
+    print u"æˆ‘å¼€å§‹é€‰è¯¾äº†,è¯¾ç¨‹ç¼–å·ï¼š"+courseNo
     times = 0
     while True :
-        #ÅĞ¶ÏÊÇ·ñÑ¡µ½¿Î
+        #åˆ¤æ–­æ˜¯å¦é€‰åˆ°è¯¾
         times = times+1
-        text = getData(geturl1,header1,data1)
-        text = text.encode('utf-8')
-        pattern2 = ('ÒÑÑ¡(.{0,200})align=\"').decode('gbk').encode('utf-8')
+        (state, text) = getData(geturl1,header1,data1)
+        if state == False:
+            print "æ‰“å¼€è¯¾ç¨‹åˆ—è¡¨é¡µé¢å¤±è´¥"
+            return
+        pattern2 = ('å·²é€‰(.{0,200})align=\"')
         result = re.findall(pattern2,text,re.S)
         #print result
-        success = len(result) #Îª0Îª²»³É¹¦ ¼ÌĞø
-        if (0 != success)and(result[0].find(courseNo)!=-1):
-            print "Nice£¬ÒÑ¾­Ñ¡µ½¿Î³Ì:"+courseNo
+        success = len(result) #ä¸º0ä¸ºä¸æˆåŠŸ ç»§ç»­
+        if (success != 0)and(result[0].find(courseNo)!=-1):
+            print u"Niceï¼Œå·²ç»é€‰åˆ°è¯¾ç¨‹:"+courseNo
             break
-        #·¢ËÍÑ¡¿Î°ü
-        print "µÚ"+str(times)+"´Î³¢ÊÔÑ¡Ôñ¿Î³Ì"+courseNo+",µ«ÊÇÃ»Ñ¡µ½£¡"
-        postData(posturl,headers,data)
-        time.sleep(5)#sleep
+        #å‘é€é€‰è¯¾åŒ…
+        print u"ç¬¬"+str(times)+"æ¬¡å°è¯•é€‰æ‹©è¯¾ç¨‹"+courseNo+u",ä½†æ˜¯æ²¡é€‰åˆ°ï¼"
+        (state, text) = postData(posturl,headers,data)
+        time.sleep(3)#sleep
     return 
 def postRw(courseNo):
     posturl = 'http://xk.urp.seu.edu.cn/jw_css/xk/runSelectclassSelectionAction.action?select_jxbbh='+courseNo+'&select_xkkclx=45&select_jhkcdm=00034&select_mkbh=rwskl'
@@ -225,22 +312,26 @@ def postRw(courseNo):
     data = {
             '{}':''
             }
-    text = postData(posturl,headers,data)
-    return text
+    (state, text) = postData(posturl,headers,data)
+    return (state, text)
 def checkRwState(text):
-    text = text.encode('gbk')
-    if text.find('true') != -1:  #Ñ¡¿Î³É¹¦
+    if text.find('true') != -1:  #é€‰è¯¾æˆåŠŸ
         return 0
-    if text.find('Ãû¶îÒÑÂú') != -1:
+    if text.find('åé¢å·²æ»¡') != -1:
         return 1
-    if text.find('³åÍ»') != -1:
+    if text.find('å†²çª') != -1:
         return 2
-    return
-def Mode3(semester):
-    s =  semester
-    text = selectSemester(s)
-    print "==============\nÄ£Ê½3£¬¿ªÊ¼Ñ¡¿Î\n=============="
-    #»ñÈ¡ÈËÎÄ¿ÎÒ³Ãæ
+    return -1
+def Mode3(semesterNum, url):    
+    (state, text) = selectSemester(semesterNum, url)
+    if state == False:
+        print text.decode('utf-8')
+        print u'åˆ‡æ¢åˆ°å­¦æœŸ' + str(semesterNum) + u"å¤±è´¥"
+        return
+    else:
+        print u'åˆ‡æ¢åˆ°å­¦æœŸ' + str(semesterNum) + u"æˆåŠŸ"
+    print u"==============\næ¨¡å¼3ï¼Œå¼€å§‹é€‰è¯¾\n=============="
+    #è·å–äººæ–‡è¯¾é¡µé¢
     geturl1 = 'http://xk.urp.seu.edu.cn/jw_css/xk/runViewsecondSelectClassAction.action?select_jhkcdm=00034&select_mkbh=rwskl&select_xkkclx=45&select_dxdbz=0'
     header1 = {
                 'Host' : 'xk.urp.seu.edu.cn',
@@ -249,78 +340,132 @@ def Mode3(semester):
                 'User-Agent' : 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:14.0) Gecko/20100101 Firefox/14.0.1',
                 }   
     data1 = {}
-    text = getData(geturl1,header1,data1)
-    text = text.encode('utf-8')
-    #»ñÈ¡ËùÓĞµÄ¿Î³Ì±àºÅ
-    pattern = ('\"8%\" id=\"(.{0,20})\" align').decode('gbk').encode('utf-8')
+    (state, text) = getData(geturl1,header1,data1)
+    if state == False:
+        print u"æ‰“å¼€è¯¾ç¨‹åˆ—è¡¨é¡µé¢å¤±è´¥"
+        return
+
+    #è·å–æ‰€æœ‰çš„è¯¾ç¨‹ç¼–å·
+    pattern = ('\"8%\" id=\"(.{0,20})\" align')
     courseList = re.findall(pattern,text,re.S)
     #print courseList 
     courseCtList =[]
-    #ÕÒ³ö²¢È¥µô³åÍ»µÄ¿Î³Ì
+    #æ‰¾å‡ºå¹¶å»æ‰å†²çªçš„è¯¾ç¨‹
     for course in courseList:
-        backText = postRw(course)
-        state = checkRwState(backText)
+        (state, backText) = postRw(course)
+        if state == True:  # ewww bad name here
+            state = checkRwState(backText)
+        else:
+            state = -1  # network error or something else
         if state == 2:
             courseCtList.append(course)
         if state == 0:
-            print "Nice Ñ¡µ½ÁËÒ»ÃÅ¿Î£º"+course
-            return   #³É¹¦ÁË
+            print u"Nice é€‰åˆ°äº†ä¸€é—¨è¯¾ï¼š"+course
+            return   #æˆåŠŸäº†
     #print courseCtList
     courseTemp = [i for i in courseList if (i not in courseCtList)]
     #print courseTemp
     times = 0
     while True:
         times = times + 1
-        #ÕÒ³öÒÑÂúµÄ¿Î³Ì
-        pattern = ('ÒÑÂú.+?(\"8%\" id=\")(.{0,20})\" align').decode('gbk').encode('utf-8')
+        #æ‰¾å‡ºå·²æ»¡çš„è¯¾ç¨‹
+        pattern = ('å·²æ»¡.+?(\"8%\" id=\")(.{0,20})\" align')
         courseYmList = [i[1] for i in re.findall(pattern,text,re.S)]
         #print courseYmList
-        #ÕÒ³ö¿ÉÒÔÑ¡µÄ¿Î³Ì±àºÅ
+        #æ‰¾å‡ºå¯ä»¥é€‰çš„è¯¾ç¨‹ç¼–å·
         courseAva = [i for i in courseTemp if (i not in courseYmList) ]
-        print courseAva
-        #Ñ¡¿ÎÁË
+        #é€‰è¯¾äº†
         if len(courseAva) == 0:
-                    print "µÚ"+str(times)+"´ÎË¢ĞÂ£¬Ã¿ÃÅ¿Î¶¼Ñ¡²»ÁË.."
+            print u"ç¬¬"+str(times)+u"æ¬¡åˆ·æ–°ï¼Œæ¯é—¨è¯¾éƒ½é€‰ä¸äº†.."
         else:
             for course in courseAva:
-                state = checkRwState(postRw(course))
-                if 0 == state:
-                    print "Nice Ñ¡µ½ÁËÒ»ÃÅ¿Î£º"+course
+                (state, text) = postRw(course)
+                if state == True:
+                    state = checkRwState(text)
+                else:
+                    state = -1
+                if state == 0:
+                    print u"Nice é€‰åˆ°äº†ä¸€é—¨è¯¾ï¼š"+course
                     return
-                if 1 == state:
-                    print "ÈËÆ·²»ºÃ ÑÛÆ¤×Óµ×ÏÂµÄ¿Î±»ÇÀÁË"
-        #Ë¢ĞÂÈËÎÄÑ¡¿Î½çÃæ
-        text = getData(geturl1,header1,data1)
-        text = text.encode('utf-8')
-        time.sleep(5)
+                if state == 1:
+                    print u"äººå“ä¸å¥½ çœ¼çš®å­åº•ä¸‹çš„è¯¾è¢«æŠ¢äº†"
+        #åˆ·æ–°äººæ–‡é€‰è¯¾ç•Œé¢
+        (state, text) = getData(geturl1,header1,data1)
+        if text.count('å·²é€‰') == 3:  # in case of multi-instances
+            print u"å·²ç»é€‰åˆ°ä¸€é—¨è¯¾äº†"
+            break
 
-    
+        if state == False:
+            print u"æ‰“å¼€è¯¾ç¨‹åˆ—è¡¨é¡µé¢å¤±è´¥"
+            return
+        
+        time.sleep(3)
 
 
 if __name__ == "__main__":
-    print "\n\n\n\n"
-    print "===================================================================== "
-    print "                    Seu_Jwc_Fker ¶«ÄÏ´óÑ§Ñ¡¿ÎÖúÊÖ\n"
-    print "     ·ÃÎÊ github.com/SnoozeZ/seu_jwc_fker ÒÔÁË½â±¾¹¤¾ßµÄ×îĞÂ¶¯Ì¬"
-    print "===================================================================== "
-    print "ÇëÑ¡ÔñÄ£Ê½£º"
-    print "1. Í¬Ôº¾ºÕù³ô±íÁ³Ä£Ê½£ºÖ»ÖµÊØÖ÷½çÃæ±¾ÔºµÄËùÓĞ¡°·ş´ÓÍÆ¼ö¡±¿Î³Ì"
-    print "2. ¹Â×¢Ò»ÖÀÄ£Ê½£ºÖ»ÖµÊØ×Ó½çÃæ¡°ÈËÎÄÉç¿ÆÀà¡±ÖĞÄãÖ¸¶¨Ò»ÃÅ¿Î³Ì"
-    print "3. ±©Á¦Ä£Ê½£ºÖµÊØ×Ó½çÃæ¡°ÈËÎÄÉç¿ÆÀà¡±ÈÎÒâÒ»ÃÅ¿Î³Ì£¬ÓĞÊ£Óà¾ÍÑ¡ÉÏ"
-    #print "4. Ö»ÖµÊØ×Ó½çÃæ¡°×ÔÈ»¿ÆÑ§Óë¼¼Êõ¿ÆÑ§Àà¡±ÖĞµÄÖ¸¶¨Ò»ÃÅ¿Î³Ì£¨¿ª·¢ÖĞ£©"
-    #print "5. ÊäÈëÖ¸¶¨ÈÎÒâÃÅ¿Î³ÌµÄÃû×Ö²¢ÖµÊØ£¨¿Î³ÌÀàĞÍ²»ÏŞ£©£¨¿ª·¢ÖĞ£©"
-    mode = input('\nÇëÊäÈëÄ£Ê½±àºÅ(Èç:1)£º')
-    userId = raw_input('ÇëÊäÈëÒ»¿¨Í¨ºÅ(Èç:213111111)£º')
-    passWord = raw_input('ÇëÊäÈëÃÜÂë(Èç:65535)£º')
-    semester = input('ÇëÊäÈëÑ§ÆÚ±àºÅ(¶ÌÑ§ÆÚÎª1£¬Çï¼¾Ñ§ÆÚÎª2£¬´º¼¾Ñ§ÆÚÎª3)£º')
-    if 1 == mode:
-        loginIn(userId,passWord)
-        Mode1(semester)
-    if 2 == mode:
-        courseName = raw_input('ÇëÊäÈëÄãÏëÖµÊØµÄÈËÎÄ¿ÎÃû³Æ»òÕßÆä¹Ø¼ü´Ê£¨Èç:ÒôÀÖ¼øÉÍ£©£º')
-        loginIn(userId,passWord)
-        Mode2(semester,courseName)
-    if 3 == mode:
-        loginIn(userId,passWord)
-        Mode3(semester)
-    input('°´ÈÎÒâ¼üÍË³ö'£©
+    print u"\n\n\n\n"
+    print u"===================================================================== "
+    print u"                    Seu_Jwc_Fker ä¸œå—å¤§å­¦é€‰è¯¾åŠ©æ‰‹\n"
+    print u"     è®¿é—® github.com/SnoozeZ/seu_jwc_fker ä»¥äº†è§£æœ¬å·¥å…·çš„æœ€æ–°åŠ¨æ€"
+    print u"===================================================================== "
+    print u"è¯·é€‰æ‹©æ¨¡å¼ï¼š"
+    print u"1. åŒé™¢ç«äº‰è‡­è¡¨è„¸æ¨¡å¼ï¼šåªå€¼å®ˆä¸»ç•Œé¢æœ¬é™¢çš„æ‰€æœ‰â€œæœä»æ¨èâ€è¯¾ç¨‹"
+    print u"2. å­¤æ³¨ä¸€æ·æ¨¡å¼ï¼šåªå€¼å®ˆå­ç•Œé¢â€œäººæ–‡ç¤¾ç§‘ç±»â€ä¸­ä½ æŒ‡å®šä¸€é—¨è¯¾ç¨‹"
+    print u"3. æš´åŠ›æ¨¡å¼ï¼šå€¼å®ˆå­ç•Œé¢â€œäººæ–‡ç¤¾ç§‘ç±»â€ä»»æ„ä¸€é—¨è¯¾ç¨‹ï¼Œæœ‰å‰©ä½™å°±é€‰ä¸Š"
+    #print u"4. åªå€¼å®ˆå­ç•Œé¢â€œè‡ªç„¶ç§‘å­¦ä¸æŠ€æœ¯ç§‘å­¦ç±»â€ä¸­çš„æŒ‡å®šä¸€é—¨è¯¾ç¨‹ï¼ˆå¼€å‘ä¸­ï¼‰"
+    #print u"5. è¾“å…¥æŒ‡å®šä»»æ„é—¨è¯¾ç¨‹çš„åå­—å¹¶å€¼å®ˆï¼ˆè¯¾ç¨‹ç±»å‹ä¸é™ï¼‰ï¼ˆå¼€å‘ä¸­ï¼‰"
+    
+    mode = input(u'\nè¯·è¾“å…¥æ¨¡å¼ç¼–å·(å¦‚:1)ï¼š')
+    userId = raw_input(u'è¯·è¾“å…¥ä¸€å¡é€šå·(å¦‚:213111111)ï¼š')
+    passWord = raw_input(u'è¯·è¾“å…¥å¯†ç (å¦‚:65535)ï¼š')
+    semester = input(u'è¯·è¾“å…¥å­¦æœŸç¼–å·(çŸ­å­¦æœŸä¸º1ï¼Œç§‹å­£å­¦æœŸä¸º2ï¼Œæ˜¥å­£å­¦æœŸä¸º3)ï¼š')
+    inputCaptcha = raw_input(u"æ˜¯å¦æ‰‹åŠ¨è¾“å…¥éªŒè¯ç ï¼Ÿ [y]/n: ")
+
+    # used for exporting to exe. damn you cmd
+    # mode = input(u'\nè¯·è¾“å…¥æ¨¡å¼ç¼–å·(å¦‚:1)ï¼š'.encode('gbk'))
+    # userId = raw_input(u'è¯·è¾“å…¥ä¸€å¡é€šå·(å¦‚:213111111)ï¼š'.encode('gbk'))
+    # passWord = raw_input(u'è¯·è¾“å…¥å¯†ç (å¦‚:65535)ï¼š'.encode('gbk'))
+    # semester = input(u'è¯·è¾“å…¥å­¦æœŸç¼–å·(çŸ­å­¦æœŸä¸º1ï¼Œç§‹å­£å­¦æœŸä¸º2ï¼Œæ˜¥å­£å­¦æœŸä¸º3)ï¼š'.encode('gbk'))
+    # inputCaptcha = raw_input(u"æ˜¯å¦æ‰‹åŠ¨è¾“å…¥éªŒè¯ç ï¼Ÿ [y]/n: ".encode('gbk'))
+
+    if inputCaptcha == 'n' or inputCaptcha == 'N':  # should other cases be considered?
+        inputCaptcha = False
+    else:
+        inputCaptcha = True
+
+    (state, text, url) = loginIn(userId,passWord, inputCaptcha)
+    failTimes = 0
+    if inputCaptcha == True and state == False:
+        print text.decode('utf-8')
+    else:
+        while state == False:
+            print text.decode('utf-8')
+            failTimes += 1
+            if failTimes >= 10:
+                print u'éªŒè¯ç è¯†åˆ«å¤±è´¥è¾¾åˆ°10æ¬¡'
+                break
+            if text.find('å°šæœªå¼€æ”¾') != -1:  # would this make it more unfair to others?
+                # # temporarily enable this
+                # failTimes = 0
+                pass
+            if text.find('éªŒè¯ç é”™è¯¯') == -1:  # maybe wrong password or something
+                break
+            (state, text, url) = loginIn(userId, passWord, inputCaptcha)
+
+    if state == True:
+        if 1 == mode:
+            Mode1(semester, url)
+        if 2 == mode:
+            courseName = raw_input(u'è¯·è¾“å…¥ä½ æƒ³å€¼å®ˆçš„äººæ–‡è¯¾åç§°æˆ–è€…å…¶å…³é”®è¯ï¼ˆå¦‚:éŸ³ä¹é‰´èµï¼‰ï¼š')
+            # courseName = raw_input(u'è¯·è¾“å…¥ä½ æƒ³å€¼å®ˆçš„äººæ–‡è¯¾åç§°æˆ–è€…å…¶å…³é”®è¯ï¼ˆå¦‚:éŸ³ä¹é‰´èµï¼‰ï¼š'.encode('gbk'))  # used for exporting to exe
+            try:
+                courseName.decode('utf-8')
+            except:
+                courseName.decode('gbk').encode('utf-8')  #handle the input from cmd
+            Mode2(semester,courseName, url)
+        if 3 == mode:
+            Mode3(semester, url)
+    else:
+        print u"è¦ä¸è¯•è¯•é€€å‡ºåé‡å¯ä¸€ä¸‹æœ¬ç¨‹åºï¼Ÿ"
+    input(u'æŒ‰ä»»æ„é”®é€€å‡º')    
+    # input(u'æŒ‰ä»»æ„é”®é€€å‡º'.encode('gbk'))  #used for exporting to exe
