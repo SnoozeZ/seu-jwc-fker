@@ -38,18 +38,18 @@ def loginIn(userName, passWord, inputCaptcha = True):
 	opener = urllib2.build_opener(cookie_support, urllib2.HTTPHandler)  
 	urllib2.install_opener(opener)  
     #打开选课页面
-	h = urllib2.urlopen('http://xk.urp.seu.edu.cn/jw_css/system/showLogin.action', timeout = 5)   # is this really necessary?
+#	h = urllib2.urlopen('http://xk.urp.seu.edu.cn/jw_css/system/showLogin.action', timeout = 10)   # seems it is not necessary
     #获取验证码
     
 	for i in range(10):
 		try:
-			image = urllib2.urlopen('http://xk.urp.seu.edu.cn/jw_css/getCheckCode', timeout = 5)
+			image = urllib2.urlopen('http://xk.urp.seu.edu.cn/jw_css/getCheckCode', timeout = 10)
 			break
 		except Exception, e:
 			print e
 			continue
 	else:
-		return (False, "验证码获取失败")
+		return (False, "验证码获取失败", '')
 
 	f = open('code.jpg','wb')
 	f.write(image.read())
@@ -136,28 +136,6 @@ def postData(posturl,headers,postData):
         return (False, "数据发送失败")
     return (True, text)
 
-
-# since the page doesnt directly return the wanted url, this method is useless for now
-#def postToGetUrl(posturl, headers, postData):
-#    ''' post data and return the url the page jumps to '''
-#    postData = urllib.urlencode(postData)  #Post数据编码   
-#    request = urllib2.Request(posturl, postData, headers)#通过urllib2提供的request方法来向指定Url发送我们构造的数据，并完成登录过程 
-#    text = ''
-#    url = ''
-#    for i in range(10):
-#        try:
-#            response = urllib2.urlopen(request, timeout = 5)
-#            text = response.read().decode('utf-8')
-#            url = response.geturl()
-#            break
-#        except Exception, e:
-#            print 'fail to get response'
-#            print 'trying to open agian...'
-#            continue
-#    else:
-#        return (False, 'fail to post data')
-#    return (True, text, url)
-
 def getData(geturl,header,getData, returnUrl = False):
     getData = urllib.urlencode(getData)
     request = urllib2.Request(geturl, getData, header)
@@ -210,7 +188,8 @@ def Mode1(semesterNum, url):
     while m:
         pos = m.end()
         tempText = m.group()
-        course = [tempText[23:31],tempText[34:51],tempText[54:56],1]  # any potential danger here? 
+        parameters = re.search(r"selectThis\('(.*?)','(.*?)','(.*?)'", tempText)
+        course = [parameters.group(1),parameters.group(2),parameters.group(3),1]
         courseList.append(course)
         m=pattern.search(text,pos)  #寻找下一个
     times = 0
@@ -240,21 +219,18 @@ def Mode1(semesterNum, url):
                 #post选课包，并获取返回状态
                 (state, text) = postData(posturl,headers,data)
                 if state == False:
-                    flag = 3
+                    text = '网络错误'
                 else:
-                    flag = stateCheck(text)
-                #根据选课状态返回信息
-                if flag == 0:
+                    if text.find('isSuccess":"false') != -1:
+                        state = False
+                        text = re.search(r'errorStr":"(.*?)"', text).group(1)
+                if state == True:
                     course[3] = 0
-                    success = success + 1
-                    total = total - 1
+                    success += 1
+                    total -= 1
                     print u"Nice, 课程"+str(course[0])+u" 选择成功"
-                elif flag == 1:
-                    print u"课程"+str(course[0])+u" 名额已满"
-                elif flag == 2:
-                    print u"课程"+str(course[0])+u" 选课失败，原因未知"
-                elif flag == 3:
-                    print u"课程"+str(course[0])+u" 选课失败，网络错误"
+                else:
+                    print u"课程"+str(course[0])+u" 选课失败，" + text.decode('utf-8')
        
 def Mode2(semesterNum,courseName, url):
     (state, text) = selectSemester(semesterNum, url)

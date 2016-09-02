@@ -39,7 +39,7 @@ def loginIn(userName, passWord, inputCaptcha = True):
 	opener = urllib2.build_opener(cookie_support, urllib2.HTTPHandler)  
 	urllib2.install_opener(opener)  
     #打开选课页面
-	h = urllib2.urlopen('http://xk.urp.seu.edu.cn/jw_css/system/showLogin.action', timeout = 10)   # is this really necessary?
+#	h = urllib2.urlopen('http://xk.urp.seu.edu.cn/jw_css/system/showLogin.action', timeout = 10)   # seems it is not necessary
     #获取验证码
     
 	for i in range(10):
@@ -50,7 +50,7 @@ def loginIn(userName, passWord, inputCaptcha = True):
 			print e
 			continue
 	else:
-		return (False, "验证码获取失败")
+		return (False, "验证码获取失败", '')
 
 	f = open('code.jpg','wb')
 	f.write(image.read())
@@ -87,9 +87,9 @@ def loginIn(userName, passWord, inputCaptcha = True):
 	if state == True:
 		if (text.find('选课批次') != -1):  # a bad label; the url returned should be the best
 			print u"登录成功"
-			function = re.search(r'onclick="changeXnXq.*\)"', text); # find the function whose parameter are wanted
+			function = re.search(r'onclick="changeXnXq.*\)"', text); # find the function whose parameter are desired
 			function = function.group()		
-			parameters = re.search(r"'(.*)','(.*)','(.*)'\)", function) # url parameters
+			parameters = re.search(r"'(.*)','(.*)','(.*)'\)", function) # fetch url parameters
 			url = "http://xk.urp.seu.edu.cn/jw_css/xk/runXnXqmainSelectClassAction.action?Wv3opdZQ89ghgdSSg9FsgG49koguSd2fRVsfweSUj=Q89ghgdSSg9FsgG49koguSd2fRVs&selectXn=" + parameters.group(1) + "&selectXq=" + parameters.group(2) + "&selectTime=" + parameters.group(3)
 		else:
 			state = False
@@ -117,7 +117,7 @@ def selectSemester(semesterNum, url):
     #get获取学期课程
     (state, text) = getData(geturl,header,data)
     if state == True:
-        if text.find("数据异常") != -1:  # switch to an unavailable semester
+        if text.find("数据异常") != -1:  # switched to an unavailable semester
             state = False
             text = "目前无法选择学期" + str(semesterNum)
     return (state, text)
@@ -138,28 +138,6 @@ def postData(posturl,headers,postData):
     else:
         return (False, "数据发送失败")
     return (True, text)
-
-
-# since the page doesnt directly return the wanted url, this method is useless for now
-#def postToGetUrl(posturl, headers, postData):
-#    ''' post data and return the url the page jumps to '''
-#    postData = urllib.urlencode(postData)  #Post数据编码   
-#    request = urllib2.Request(posturl, postData, headers)#通过urllib2提供的request方法来向指定Url发送我们构造的数据，并完成登录过程 
-#    text = ''
-#    url = ''
-#    for i in range(10):
-#        try:
-#            response = urllib2.urlopen(request, timeout = 5)
-#            text = response.read().decode('utf-8')
-#            url = response.geturl()
-#            break
-#        except Exception, e:
-#            print 'fail to get response'
-#            print 'trying to open agian...'
-#            continue
-#    else:
-#        return (False, 'fail to post data')
-#    return (True, text, url)
 
 def getData(geturl,header,getData, returnUrl = False):
     getData = urllib.urlencode(getData)
@@ -246,7 +224,6 @@ def Mode1(semesterNum, url):
                 if state == False:
                     text = '网络错误'
                 else:
-                    # flag = stateCheck(text)
                     if text.find('isSuccess":"false') != -1:
                         state = False
                         text = re.search(r'errorStr":"(.*?)"', text).group(1)
@@ -397,7 +374,6 @@ def Mode3(semesterNum, url):
         #print courseYmList
         #找出可以选的课程编号
         courseAva = [i for i in courseTemp if (i not in courseYmList) ]
-        print courseAva
         #选课了
         if len(courseAva) == 0:
             print u"第"+str(times)+u"次刷新，每门课都选不了.."
@@ -490,6 +466,6 @@ if __name__ == "__main__":
         if 3 == mode:
             Mode3(semester, url)
     else:
-        print u"要不试试退出后重新打开一下本程序？"
+        print u"要不试试退出后重启一下本程序？"
     input(u'按任意键退出')    
     # input(u'按任意键退出'.encode('gbk'))  #used for exporting to exe
