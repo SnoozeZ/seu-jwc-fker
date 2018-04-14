@@ -1,7 +1,5 @@
 # coding: utf-8
 
-#import urllib.request
-
 ########################################################################
 #           DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE
 #                   Version 2, December 2004
@@ -22,11 +20,10 @@
 #            if you want to pack it up into EXE, Mind that you got to
 #           do .encode after str
 
-import html.parser  
+
 import urllib.parse  
 import urllib.request, urllib.parse, urllib.error
-import http.cookiejar  
-import string  
+import http.cookiejar
 import re
 import time
 import numpy as np
@@ -34,6 +31,34 @@ import os
 import cv2
 
 import SEU_Decode_CNN
+import URL2IMG
+
+cnt=0
+total=0
+
+
+WantedLessonsNameList=[]
+
+
+
+def getTrainData(img,code,text):
+    if text.find('尚未开放') != -1:  # would this make it more unfair to others?
+        if cv2.imwrite("E:/Python_Project/Python3.6/SEU_LES_CATCHER/TrainData/"+code+".jpg",img)==True:
+
+            global cnt
+            cnt+=1
+            print(str(cnt)+"训练数据已保存")
+            if(cnt>=1200):
+                quit()
+def EvaluateModel(text):
+    global total
+    total+=1
+    if text.find('尚未开放') != -1:
+        global cnt
+        cnt += 1
+    if (total >= 200):
+        print("验证码识别成功率 %d %%"%(int(cnt/total*100)))
+        quit()
 
 
 
@@ -50,7 +75,7 @@ def loginIn(userName, passWord, inputCaptcha = False):
     
     for i in range(10):
         try:
-            image = urllib.request.urlopen('http://xk.urp.seu.edu.cn/jw_css/getCheckCode', timeout = 10)
+            CodeImg = URL2IMG.url_to_image('http://xk.urp.seu.edu.cn/jw_css/getCheckCode')
             break
         except Exception as e:
             print(e)
@@ -58,17 +83,19 @@ def loginIn(userName, passWord, inputCaptcha = False):
     else:
         return (False, "验证码获取失败", '')
 
-    f = open('code.jpg','wb')
+    '''f = open('code.jpg','wb')
     f.write(image.read())
     f.close()
 
+    time.sleep(1)  # sleeps +1
 
+    CodeImg=cv2.imread('code.jpg')'''
     if inputCaptcha == True:  # manually input the capthcha
     #读取验证码
         # code = raw_input(u'请打开我所在目录下的code.jpg，并在这里敲入里面的四位数字验证码：')
         code = input('请打开我所在目录下的code.jpg，并在这里敲入里面的四位数字验证码：')  # used for exporting to exe
     else:  # automatically recognise the captcha
-        code=SEU_Decode_CNN.SEU_Decode(cv2.imread('code.jpg'))
+        code=SEU_Decode_CNN.SEU_Decode(CodeImg)
 
     #构造post数据
     posturl = 'http://xk.urp.seu.edu.cn/jw_css/system/login.action'
@@ -101,6 +128,9 @@ def loginIn(userName, passWord, inputCaptcha = False):
             state = False
             errorMessage = re.search(r'id="errorReason".*?value="(.*?)"', text)
             text = errorMessage.group(1)
+            #getTrainData(CodeImg,code,text)
+            #EvaluateModel(text)
+
     else:
         text = "网络错误，登录失败"
     return (state, text, url)
@@ -139,20 +169,20 @@ def postData(posturl,headers,postData):
             break
         except HTTPError as e:
             print("The server couldn't fulfill the request.")
-            print('Error code: ', e.code)
+            #print('Error code: ', e.code)
         except URLError as e:
             print('We failed to reach a server.')
-            print('Reason: ', e.reason)
+            #print('Reason: ', e.reason)
         else:
             print("good!")
-            print(response.read().decode("utf8"))
+            #print(response.read().decode("utf8"))
             continue
     else:
         return (False, "数据发送失败")
     return (True, text.decode("utf-8"))
 
 def getData(geturl,header,getData, returnUrl = False):
-    getData = urllib.parse.urlencode(getData)
+    getData = urllib.parse.urlencode(getData).encode("utf-8")
     request = urllib.request.Request(geturl, getData, header)
     text = ''
     url = ''
@@ -173,9 +203,9 @@ def getData(geturl,header,getData, returnUrl = False):
             return (False, "获取数据失败", '')
 
     if returnUrl == False:
-        return (True, text)
+        return (True, text.decode("utf-8"))
     else:
-        return(True, text, url)
+        return(True, text.decode("utf-8"), url)
 
 def stateCheck(textValue):    
     text = textValue
@@ -189,7 +219,7 @@ def stateCheck(textValue):
 def Mode1(semesterNum, url):
     (state, text) = selectSemester(semesterNum, url)
     if state == False:
-        print(text.decode('utf-8'))
+        print(text)
         print('切换到学期' + str(semesterNum) + "失败")
         return
     else:
@@ -220,19 +250,34 @@ def Mode1(semesterNum, url):
     success = 0
     total = len(courseList)
     for courseNames in courseNameList:
-        print(courseNameList.index(courseNames)+1,courseNames.encode('gbk'))
+        print(courseNameList.index(courseNames)+1,courseNames)
         # print courseNameList.index(courseNames) + 1, courseNames
-
+    ManualChoose = True
     WantedLessons=np.zeros(total)
-    while True:
-        # WantedLessonsID=input(u'\n请输入需要的课程(输入0结束选择，输入-1选择全部)：')
-        WantedLessonsID = eval(input('\n请输入需要的课程(输入0结束选择，输入-1选择全部)：'.encode('gbk')))
-        if(WantedLessonsID==0):
-            break
-        if (WantedLessonsID == -1):
-            WantedLessons=np.ones(total)
-            break
-        WantedLessons[WantedLessonsID-1]=1
+    if len(WantedLessonsNameList)>0:
+        ManualChoose = False
+        for courseNames in courseNameList:
+            for WantedLes in WantedLessonsNameList:
+                if courseNames.find(WantedLes)!=-1:
+                    WantedLessons[courseNameList.index(courseNames)]=1
+        print("读取本地文件后，当前将要选择的课程是\n")
+        for id,isWanted in enumerate(WantedLessons):
+            if(isWanted):
+                print(courseNameList[id])
+        ManChoose = input("是否要继续选择？ [n]/y:")
+        if ManChoose == 'y' or ManChoose == 'Y':  # should other cases be considered?
+            ManualChoose = True
+
+    if ManualChoose:
+        while True:
+            # WantedLessonsID=input(u'\n请输入需要的课程(输入0结束选择，输入-1选择全部)：')
+            WantedLessonsID = eval(input('\n请输入需要的课程(输入0结束选择，输入-1选择全部)：'))
+            if(WantedLessonsID==0):
+                break
+            if (WantedLessonsID == -1):
+                WantedLessons=np.ones(total)
+                break
+            WantedLessons[WantedLessonsID-1]=1
 
 
     while True:
@@ -240,9 +285,9 @@ def Mode1(semesterNum, url):
             print("目前没有课可以选择")
 
             break
-        time.sleep(3)#sleep
-        times = times +1
-        print("\n第"+str(times)+"次选课，已经成功选择"+str(success)+"门")
+        time.sleep(0.8)#sleeps +1
+        times = times+1
+        print("\n第"+str(times)+"次选课，已成功选择"+str(success)+"门")
         for course in courseList:
             if course[3] == 1 and WantedLessons[courseList.index(course)]:
             #构造选课post
@@ -266,13 +311,14 @@ def Mode1(semesterNum, url):
                     if text.find('isSuccess":"false') != -1:
                         state = False
                         text = re.search(r'errorStr":"(.*?)"', text).group(1)
+
                 if state == True:
                     course[3] = 0
                     success += 1
                     total -= 1
                     print("Nice, 课程"+courseNameList[courseList.index(course)]+" 选择成功")
                 else:
-                    print("课程"+courseNameList[courseList.index(course)]+" 选课失败，" + text.decode('utf-8'))
+                    print("课程"+courseNameList[courseList.index(course)]+" 选课失败，" + text)
        
 def Mode2(semesterNum,courseName, url):
     (state, text) = selectSemester(semesterNum, url)
@@ -361,6 +407,9 @@ def checkRwState(text):
     if text.find('冲突') != -1:
         return 2
     return -1
+
+
+
 def Mode3(semesterNum, url):    
     (state, text) = selectSemester(semesterNum, url)
     if state == False:
@@ -461,7 +510,14 @@ if __name__ == "__main__":
     # inputCaptcha = raw_input(u"是否手动输入验证码？ [y]/n: ")
 
     #used for exporting to exe. damn you cmd
+    mode = eval(input('\n请输入模式编号(如:1)：'))
+    semester = eval(input('请输入学期编号(短学期为1，秋季学期为2，春季学期为3)：'))
+    inputCaptcha = input("是否手动输入验证码？ [N]/Y: ")
 
+    if inputCaptcha == 'y' or inputCaptcha == 'Y':  # should other cases be considered?
+        inputCaptcha = True
+    else:
+        inputCaptcha = False
     ReadLocalDoc = input("是否读取本地账户信息？ [y]/n: ")
     userId=""
     passWord=""
@@ -476,7 +532,7 @@ if __name__ == "__main__":
             with open('Document.txt', 'r') as LocalDoc:
                 lines=LocalDoc.readlines()
                 userId=lines[0]
-                userId=userId[:-1]
+                userId=userId.strip('\n')
                 print('Local ID: '+userId)
                 passWord=lines[1]
                 print('Local Password: '+passWord)
@@ -484,23 +540,61 @@ if __name__ == "__main__":
             print("没有找到本地账户信息，请手动输入")
             ReadLocalDoc=False
 
+
     if not ReadLocalDoc:
-        userId = input('请输入一卡通号(如:213111111)：'.encode('gbk'))
-        passWord = input('请输入密码(如:65535)：'.encode('gbk'))
-        UpdateLocalDoc = input("是否更新本地账户信息？ [n]/y: ".encode('gbk'))
-        if UpdateLocalDoc == 'y' or UpdateLocalDoc == 'Y':  # should other cases be considered?
+        userId = input('请输入一卡通号(如:213111111)：')
+        passWord = input('请输入密码(如:65535)：')
+        UpdateLocalDoc = input("是否更新本地账户信息？ [y]/n: ")
+        if UpdateLocalDoc != 'n' and UpdateLocalDoc != 'N':  # should other cases be considered?
             with open('Document.txt', 'w') as LocalDoc:
                 LocalDoc.write(userId)
                 LocalDoc.write('\n')
                 LocalDoc.write(passWord)
 
-    semester = eval(input('请输入学期编号(短学期为1，秋季学期为2，春季学期为3)：'))
-    inputCaptcha = input("是否手动输入验证码？ [N]/Y: ")
 
-    if inputCaptcha == 'y' or inputCaptcha == 'Y':  # should other cases be considered?
-        inputCaptcha = True
+    ReadLocalLessonList = input("是否读取本地目标课程信息？ [y]/n: ")
+    if ReadLocalLessonList == 'n' or ReadLocalLessonList == 'N':  # should other cases be considered?
+        ReadLocalLessonList = False
     else:
-        inputCaptcha = False
+        ReadLocalLessonList = True
+
+    if ReadLocalLessonList==True:
+        if os.path.exists('Lesson.txt'):
+            with open('Lesson.txt', 'r') as LocalLes:
+                WantedLessonsNameList=LocalLes.readlines()
+                for id,ls in enumerate(WantedLessonsNameList):
+                    WantedLessonsNameList[id]=WantedLessonsNameList[id].strip('\n')
+                print(WantedLessonsNameList)
+                UpdateLocalLessonList = input("已找到本地课程信息，是否重新输入课程列表并更新？ [n]/y:")
+                if UpdateLocalLessonList == 'y' or UpdateLocalLessonList == 'Y':  # should other cases be considered?
+                    while True:
+                        WantedLes = input("请输入部分课程名称，输入0结束选择:")
+                        if WantedLes != '0':
+                            WantedLessonsNameList.append(WantedLes)
+                        else:
+                            break
+                    print(WantedLessonsNameList)
+                    with open('Lesson.txt', 'w') as LocalDoc:
+                        for lessons in WantedLessonsNameList:
+                            LocalDoc.write(lessons + '\n')
+
+        else:
+            UpdateLocalLessonList = input("没有找到本地课程信息，是否手动输入课程列表并自动更新？（选否待读取课程列表后手动选择） [y]/n:")
+            if UpdateLocalLessonList != 'n' and UpdateLocalLessonList != 'N':  # should other cases be considered?
+                while True:
+                    WantedLes=input("请输入部分课程名称，输入0结束选择:")
+                    if WantedLes!='0':
+                        WantedLessonsNameList.append(WantedLes)
+                    else:
+                        break
+                print(WantedLessonsNameList)
+                with open('Lesson.txt', 'w') as LocalDoc:
+                    for lessons in WantedLessonsNameList:
+                        LocalDoc.write(lessons+'\n')
+
+
+
+
 
 
 
@@ -508,19 +602,18 @@ if __name__ == "__main__":
     failTimes=0
     while state==False:
         (state, text, url) = loginIn(userId, passWord, inputCaptcha)
-        print(text)
+
         failTimes += 1
-        if failTimes % 30 == 0:
-            print('验证码识别失败达到%d次'%failTimes)
+        print('验证码识别失败达到%d次' % failTimes)
 
 
-    mode = eval(input('\n请输入模式编号(如:1)：'.encode('gbk')))
+
     if state == True:
         if 1 == mode:
             Mode1(semester, url)
         if 2 == mode:
             courseName = input('请输入你想值守的人文课名称或者其关键词（如:音乐鉴赏）：')
-            # courseName = raw_input(u'请输入你想值守的人文课名称或者其关键词（如:音乐鉴赏）：'.encode('gbk'))  # used for exporting to exe
+            # courseName = raw_input(u'请输入你想值守的人文课名称或者其关键词（如:音乐鉴赏）：')  # used for exporting to exe
             try:
                 courseName.decode('utf-8')
             except:
@@ -531,10 +624,10 @@ if __name__ == "__main__":
     else:
         print("要不试试退出后重启一下本程序？")
     eval(input('按任意键退出'))    
-    # input(u'按任意键退出'.encode('gbk'))  #used for exporting to exe
+    # input(u'按任意键退出')  #used for exporting to exe
 
 def ContinueXuanKe():
-    Continue = input("是否继续选课？ [y]/n: ".encode('gbk'))
+    Continue = input("是否继续选课？ [y]/n: ")
     if Continue == 'n' or Continue == 'N':  # should other cases be considered?
         eval(input('按任意键退出'))
         quit()
@@ -546,13 +639,13 @@ def ContinueXuanKe():
     print("1. 同院竞争模式：只值守主界面本院的“服从推荐”课程(可选择指定的任意数量课程)")
     print("2. 孤注一掷模式：只值守子界面“人文社科类”中你指定一门课程")
     print("3. 暴力模式：值守子界面“人文社科类”任意一门课程，有剩余就选上")
-    mode = eval(input('\n请输入模式编号(如:1)：'.encode('gbk')))
+    mode = eval(input('\n请输入模式编号(如:1)：'))
     if state == True:
         if 1 == mode:
             Mode1(semester, url)
         if 2 == mode:
             courseName = input('请输入你想值守的人文课名称或者其关键词（如:音乐鉴赏）：')
-            # courseName = raw_input(u'请输入你想值守的人文课名称或者其关键词（如:音乐鉴赏）：'.encode('gbk'))  # used for exporting to exe
+            # courseName = raw_input(u'请输入你想值守的人文课名称或者其关键词（如:音乐鉴赏）：')  # used for exporting to exe
             try:
                 courseName.decode('utf-8')
             except:
